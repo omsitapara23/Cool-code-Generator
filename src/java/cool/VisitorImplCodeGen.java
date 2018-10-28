@@ -842,7 +842,7 @@ class VisitorImplCodeGen {
         }
         GlobalVariables.formalList.clear();
         GlobalVariables.output.println("\n; Class: "+GlobalVariables.presentClass+", Method: "+method.name);
-        GlobalVariables.output.print("define " + UtilFunctionImpl.typeOfattr(method.typeid) + " @" + 
+        GlobalVariables.output.print("define " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " @" + 
             UtilFunctionImpl.getMangledNameWithClassAndFunction(GlobalVariables.presentClass, method.name) + "(");
         GlobalVariables.output.print(UtilFunctionImpl.getIRNameForClass(GlobalVariables.presentClass)+"* %this");
 
@@ -862,7 +862,7 @@ class VisitorImplCodeGen {
     public void traverse(AST.formal f) {
         ScopeTableHandler.scopeTable.insert(f.name, f.typeid);
         GlobalVariables.formalList.add(f.name);
-        GlobalVariables.output.print(UtilFunctionImpl.typeOfattr(f.typeid) + " %" + f.name);
+        GlobalVariables.output.print(UtilFunctionImpl.typeOfattr(f.typeid, true) + " %" + f.name);
     }
 
 }

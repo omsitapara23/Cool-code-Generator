@@ -285,7 +285,8 @@ class UtilFunctionImpl {
         }
     }
 
-    public static String typeOfattr(String type) {
+    // cond is true - return by adding '*' else without it 
+    public static String typeOfattr(String type, boolean cond) {
         if (Constants.STRING_TYPE.equals(type)) {
             return "i8*";
         } else if (Constants.INT_TYPE.equals(type)) {
@@ -297,7 +298,10 @@ class UtilFunctionImpl {
         } else if ("i1".equals(type)) {
             return "i1";
         }
-        return UtilFunctionImpl.getIRNameForClass(type) + "*";
+        if(cond)
+            return UtilFunctionImpl.getIRNameForClass(type) + "*";
+        else
+            return UtilFunctionImpl.getIRNameForClass(type);
     }
 
     public static void defaultStringsAppend() {
@@ -410,7 +414,7 @@ class UtilFunctionImpl {
                 curr_index++;
                 AST.attr curr_attr = (AST.attr) curr_f;
                 class_size += UtilFunctionImpl.SizeForClass(curr_attr.typeid);
-                printStr.append(", ").append(UtilFunctionImpl.typeOfattr(curr_attr.typeid));
+                printStr.append(", ").append(UtilFunctionImpl.typeOfattr(curr_attr.typeid, true));
                 currClassIndexMap.put(curr_attr.name, " i32 0, i32 " + curr_index);
 
             } else {
