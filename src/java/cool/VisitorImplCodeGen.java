@@ -1,18 +1,7 @@
 package cool;
 
-import java.util.Map;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
-
-import cool.AST;
-import cool.GlobalVariables;
-import cool.InheritanceGraph;
-import cool.ScopeTable;
-import cool.ScopeTableHandler;
-
-import java.util.HashSet;
-import java.lang.StringBuilder;
+import java.util.Map;
 
 class VisitorImplCodeGen {
     /*
@@ -22,187 +11,227 @@ class VisitorImplCodeGen {
     // Expression visitors
 
     // Used for no_expression
-    public void traverse(AST.expression expression) {
+    public String traverse(AST.expression expression) {
         if (expression instanceof AST.no_expr) {
             AST.no_expr exp = (AST.no_expr) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.assign) {
             AST.assign exp = (AST.assign) expression;
-            this.traverse(exp);
-        } else if (expression instanceof AST.assign) {
-            AST.assign exp = (AST.assign) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.static_dispatch) {
             AST.static_dispatch exp = (AST.static_dispatch) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.dispatch) {
             AST.dispatch exp = (AST.dispatch) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.cond) {
             AST.cond exp = (AST.cond) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.loop) {
             AST.loop exp = (AST.loop) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.block) {
             AST.block exp = (AST.block) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.let) {
             AST.let exp = (AST.let) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.typcase) {
             AST.typcase exp = (AST.typcase) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.new_) {
             AST.new_ exp = (AST.new_) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.isvoid) {
             AST.isvoid exp = (AST.isvoid) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.plus) {
             AST.plus exp = (AST.plus) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.sub) {
             AST.sub exp = (AST.sub) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.mul) {
             AST.mul exp = (AST.mul) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.divide) {
             AST.divide exp = (AST.divide) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.comp) {
             AST.comp exp = (AST.comp) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.let) {
             AST.let exp = (AST.let) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.lt) {
             AST.lt exp = (AST.lt) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.leq) {
             AST.leq exp = (AST.leq) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.eq) {
             AST.eq exp = (AST.eq) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.neg) {
             AST.neg exp = (AST.neg) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.object) {
             AST.object exp = (AST.object) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.int_const) {
             AST.int_const exp = (AST.int_const) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else if (expression instanceof AST.string_const) {
             AST.string_const exp = (AST.string_const) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         } else {
             AST.bool_const exp = (AST.bool_const) expression;
-            this.traverse(exp);
+            return this.traverse(exp);
         }
 
     }
 
-    public void traverse(AST.no_expr expression) {
-        expression.type = "_no_type";
+    public String traverse(AST.no_expr expression) {
+
+        return null;
 
     }
 
     // Visits 'ID <- expression' expression
-    public void traverse(AST.assign expression) {
-        // assignment expression
-        // expression.e1.accept(this);
-        this.traverse(expression.e1);
+    public String traverse(AST.assign expression) {
+        String returnString = this.traverse(expression.e1);
+        String varToStore;
+        String newType = returnString;
+        String varToStoreType = ScopeTableHandler.scopeTable
+                .lookUpGlobal(ScopeTableHandler.getMangledNameVar(expression.name));
 
-        if (expression.name.equals("self")) {
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                    "'self' cannot be assigned");
+        if (expression.e1.type.equals(varToStoreType) == false) {
+            if (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
+                AST.new_ newObject = new AST.new_(Constants.ROOT_TYPE, 0);
+                newObject.type = Constants.ROOT_TYPE;
+                newType = this.traverse(newObject);
+
+                String GepForType = UtilFunctionsIR.typeNameGEP(newType);
+                String GepString = UtilFunctionsIR.stringGEP(expression.e1.type);
+                UtilFunctionsIR.storeInstruction(GepString, GepForType, "i8*");
+
+            }
+
+            else {
+                newType = UtilFunctionsIR.convertInstruction(returnString, expression.e1.type, varToStoreType,
+                        UtilFunctionsIR.BITCAST);
+            }
+        }
+
+        if (GlobalVariables.formalList.contains(expression.name)) {
+            // directly taking the function parameter
+            varToStore = "%" + expression.name + " .addr";
         } else {
-            String typeExpr = ScopeTableHandler.scopeTable
-                    .lookUpGlobal(ScopeTableHandler.getMangledNameVar(expression.name));
-            // attribute not present in the scope table
-            if (typeExpr == null) {
-                String errStr = new StringBuilder().append("Attribute '").append(expression.name)
-                        .append("' is not defined").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errStr);
-            }
-            // checking for assigment
-            else if (typeExpr.equals(expression.e1.type) || typeExpr.equals(Constants.ROOT_TYPE)) {
+            // GEP
+            varToStore = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);
+        }
 
-            } else if (InheritanceGraph.restrictedInheritanceType.contains(typeExpr)
-                    || InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
-                String errStr = new StringBuilder().append("Attribute '").append(expression.name)
-                        .append("' is not consistent with type of expression").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errStr);
-            } else if (!UtilFunctionImpl.typeChecker(typeExpr, expression.e1.type,
-                    GlobalVariables.inheritanceGraph.inheritanceGraph
-                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(typeExpr)),
-                    GlobalVariables.inheritanceGraph.inheritanceGraph
-                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.e1.type)))) {
-                String errStr = new StringBuilder().append("Attribute '").append(expression.name)
-                        .append("' is not consistent with type of expression").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errStr);
+        UtilFunctionsIR.storeInstruction(newType, varToStore, UtilFunctionImpl.typeOfattr(varToStoreType, true));
+        return returnString;
 
-            }
+    }
+
+    public String irForDefaultMethod(AST.static_dispatch expression) {
+        String ir = null;
+
+        if (expression.name.equals("type_name")
+                && InheritanceGraph.restrictedInheritanceType.contains(expression.caller.type)) {
+            this.traverse(expression.caller);
+            ir = UtilFunctionsIR.stringGEP(expression.caller.type);
+        } else if (expression.name.equals("abort")
+                && InheritanceGraph.restrictedInheritanceType.contains(expression.caller.type)) {
+            this.traverse(expression.caller);
+            ir = UtilFunctionsIR.abortPrimitiveType(expression.caller.type);
+        } else if (expression.name.equals("length") && expression.typeid.equals(Constants.STRING_TYPE)) {
+            String callInst = UtilFunctionsIR.CallInstruction("i64", "strlen",
+                    "i8* " + this.traverse(expression.caller));
+            // Here we are using the strlen function defined in C for handling length.
+            ir = UtilFunctionsIR.convertInstruction(callInst, "i64", "i32", UtilFunctionsIR.TRUNC);
 
         }
-        // all correct :-)
-        expression.type = expression.e1.type;
 
+        return ir;
     }
 
     // Visits 'expression@TYPE.ID([expression [[, expression]]∗])' expression
-    public void traverse(AST.static_dispatch expression) {
-        // expression.caller.accept(this);
-        this.traverse(expression.caller);
+    public String traverse(AST.static_dispatch expression) {
+        // IR handling for default methods, if not null then we handled for default
+        // methods
+        String defaultMethodIR = irForDefaultMethod(expression);
 
-        String caller = expression.caller.type;
-        for (AST.expression expr : expression.actuals) {
-            // expr.accept(this);
-            this.traverse(expr);
-        }
+        if (defaultMethodIR == null) {
+            String traverseCaller = this.traverse(expression.caller);
+            if (InheritanceGraph.restrictedInheritanceType.contains(expression.caller.type) == false) {
+                // generating labels for different branches that we are going to construct.
+                String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
 
-        // return type not defined
-        if (GlobalVariables.inheritanceGraph.containsClass(expression.typeid) == false) {
-            String errString = new StringBuilder().append("Type undefined '").append(expression.typeid).append("'")
-                    .toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        } else if (expression.typeid.equals(caller) || Constants.ROOT_TYPE.equals(expression.typeid)) {
+                String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
 
-        } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.typeid)
-                || InheritanceGraph.restrictedInheritanceType.contains(caller)) {
-            String errString = new StringBuilder().append("Type mismatch for caller '").append(caller)
-                    .append("' expected '").append(expression.typeid + "'").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-            expression.type = Constants.ROOT_TYPE;
+                String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
 
-        } else if (!UtilFunctionImpl.typeChecker(expression.typeid, caller,
-                GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.typeid)),
-                GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(caller)))) {
-            String errString = new StringBuilder().append("Type mismatch for caller '").append(caller)
-                    .append("' expected '").append(expression.typeid + "'").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-            expression.type = Constants.ROOT_TYPE;
-        }
+                // null comparison
+                String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, traverseCaller, "null",
+                        expression.caller.type, false, false);
 
-        else {
-            String methodMangled = UtilFunctionImpl.getMangledNameWithExpression(expression.typeid, expression.actuals,
-                    expression.name);
-            if (!GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
-                String errString = new StringBuilder().append("Undefined method '").append(expression.name)
-                        .append("' for dispatch").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                        errString);
-                expression.type = Constants.ROOT_TYPE;
-            } else {
-                expression.type = GlobalVariables.mapMangledNames.get(methodMangled);
+                UtilFunctionsIR.conditionalBreakInstruction(compare, labelIfThen, labelIfElse);
+
+                UtilFunctionsIR.LabelCreator(labelIfThen);
+                UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "i32 " + expression.lineNo);
+                GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
+
+                UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+                UtilFunctionsIR.LabelCreator(labelIfElse);
+                UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+                UtilFunctionsIR.LabelCreator(labelIfEnd);
             }
+
+            // looking up for the nearest class which contains this method to be invoked
+            String temp = expression.typeid;
+            String nearestMethod;
+            while (!GlobalVariables.mangledFunctionNames
+                    .contains(UtilFunctionImpl.getMangledNameWithClassAndFunction(temp, expression.name))) {
+                temp = GlobalVariables.inheritanceGraph.inheritanceGraph
+                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(temp)).getASTClass().parent;
+            }
+            nearestMethod = temp;
+
+
+            // method is not present in the same class, so bitcast is needed
+            if(expression.caller.type.equals(nearestMethod) == false)
+            {
+                traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type, nearestMethod, UtilFunctionsIR.BITCAST);
+            }
+
+            StringBuilder br = new StringBuilder();
+            br.append(UtilFunctionImpl.typeOfattr(nearestMethod, true)).append(" ").append(traverseCaller);
+
+            // traversing for formals of expression.actuals
+            for(AST.expression formal : expression.actuals)
+            {
+                br.append(", ").append(UtilFunctionImpl.typeOfattr(formal.type, true));
+                br.append(" ").append(this.traverse(formal)); 
+            }
+
+            // invoking the method
+
+            return(UtilFunctionsIR.CallInstruction(expression.type, UtilFunctionImpl.getMangledNameWithClassAndFunction(nearestMethod, expression.name), br.toString()));
+
+
+        } else {
+            return defaultMethodIR;
+
         }
+
     }
+
+    
 
     // Visits 'expression.ID([expression [[, expression]]∗])' expression
     public void traverse(AST.dispatch expression) {
@@ -264,32 +293,78 @@ class VisitorImplCodeGen {
     }
 
     // Visits 'if expression then expression else expression fi' expression
-    public void traverse(AST.cond expression) {
+    public String traverse(AST.cond expression) {
 
-        // expression.predicate.accept(this);
-        // expression.ifbody.accept(this);
-        // expression.elsebody.accept(this);
-        this.traverse(expression.predicate);
-        this.traverse(expression.ifbody);
-        this.traverse(expression.elsebody);
+        // generating labels for different branches that we are going to construct.
+        String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
 
-        if (expression.predicate.type.equals(Constants.BOOL_TYPE) == false) {
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                    "Return type of condtion predicate is not BOOL ");
+        String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
+
+        String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
+
+        String joinTypeResult = UtilFunctionImpl.joinTypesOf(expression.ifbody.type, expression.elsebody.type,
+        GlobalVariables.inheritanceGraph.inheritanceGraph
+                .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
+        GlobalVariables.inheritanceGraph.inheritanceGraph
+                .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
+
+        String allocaReturn = UtilFunctionsIR.allocaInstruction(joinTypeResult, null);
+
+        String compare = this.traverse(expression.predicate);
+
+        String convertIns = UtilFunctionsIR.convertInstruction(compare, "i8", "i1", UtilFunctionsIR.TRUNC);
+
+        UtilFunctionsIR.conditionalBreakInstruction(convertIns, labelIfThen, labelIfElse);
+
+        // generating for if-then
+
+        UtilFunctionsIR.LabelCreator(labelIfThen);
+        String ifbody = this.traverse(expression.ifbody);
+        if(expression.ifbody.type.equals(joinTypeResult) == false)
+        {
+            ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult, UtilFunctionsIR.BITCAST);
         }
-        if (expression.ifbody.type.equals(expression.elsebody.type)) {
-            expression.type = expression.ifbody.type;
-        } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
-                || InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type)) {
-            expression.type = Constants.ROOT_TYPE;
-        } else {
-            expression.type = UtilFunctionImpl.joinTypesOf(expression.ifbody.type, expression.elsebody.type,
-                    GlobalVariables.inheritanceGraph.inheritanceGraph
-                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
-                    GlobalVariables.inheritanceGraph.inheritanceGraph
-                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
+        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
+        {
+            UtilFunctionsIR.storeInstruction(UtilFunctionsIR.loadInstruction(ifbody, UtilFunctionImpl.typeOfattr(joinTypeResult, false) ), allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        }
+        else
+        {
+            UtilFunctionsIR.storeInstruction(ifbody, allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
         }
 
+        UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+
+        // generating for if-else
+
+        UtilFunctionsIR.LabelCreator(labelIfElse);
+        String elsebody = this.traverse(expression.elsebody);
+        if(expression.elsebody.type.equals(joinTypeResult) == false)
+        {
+            elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult, UtilFunctionsIR.BITCAST);
+        }
+        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
+        {
+            UtilFunctionsIR.storeInstruction(UtilFunctionsIR.loadInstruction(elsebody, UtilFunctionImpl.typeOfattr(joinTypeResult, false) ), allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        }
+        else
+        {
+            UtilFunctionsIR.storeInstruction(elsebody, allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        }
+
+        UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+        //generating for if-end
+        UtilFunctionsIR.LabelCreator(labelIfEnd);
+        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
+        {
+            return allocaReturn;
+        }
+        else
+        {
+            return(UtilFunctionsIR.loadInstruction(allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false)));
+        }
     }
 
     // Visits 'while expression loop expression pool' expression
@@ -762,9 +837,7 @@ class VisitorImplCodeGen {
             }
         }
 
-
     }
-
 
     // Visits the attributes of the class
     public void traverse(AST.attr attribute) {
@@ -836,17 +909,16 @@ class VisitorImplCodeGen {
 
         GlobalVariables.GlobalRegisterCounter = 0;
 
-        if(GlobalVariables.presentClass.equals("Main") && ("main").equals(method.name))
-        {
+        if (GlobalVariables.presentClass.equals("Main") && ("main").equals(method.name)) {
             GlobalVariables.mainRet = method.typeid;
         }
         GlobalVariables.formalList.clear();
-        GlobalVariables.output.println("\n; Class: "+GlobalVariables.presentClass+", Method: "+method.name);
-        GlobalVariables.output.print("define " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " @" + 
-            UtilFunctionImpl.getMangledNameWithClassAndFunction(GlobalVariables.presentClass, method.name) + "(");
-        GlobalVariables.output.print(UtilFunctionImpl.getIRNameForClass(GlobalVariables.presentClass)+"* %this");
+        GlobalVariables.output.println("\n; Class: " + GlobalVariables.presentClass + ", Method: " + method.name);
+        GlobalVariables.output.print("define " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " @"
+                + UtilFunctionImpl.getMangledNameWithClassAndFunction(GlobalVariables.presentClass, method.name) + "(");
+        GlobalVariables.output.print(UtilFunctionImpl.getIRNameForClass(GlobalVariables.presentClass) + "* %this");
 
-        for(AST.formal fm: method.formals) {
+        for (AST.formal fm : method.formals) {
             GlobalVariables.output.print(", ");
             this.traverse(fm);
         }
@@ -854,7 +926,26 @@ class VisitorImplCodeGen {
         GlobalVariables.output.println(") {");
         UtilFunctionsIR.LabelCreator("entry");
 
-        //WRITE BELOW FUNCTIONS
+        // traversing the formal list
+        for (AST.formal f : method.formals) {
+            UtilFunctionsIR.allocaInstruction(UtilFunctionImpl.typeOfattr(f.typeid, true), f.name + " .addr");
+            UtilFunctionsIR.storeInstruction("%" + f.name, "%" + f.name + " .addr",
+                    UtilFunctionImpl.typeOfattr(f.typeid, true));
+
+        }
+
+        // bitcasting
+        String register = this.traverse(method.body);
+        if (method.typeid.equals(method.body.type) == false) {
+            register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid,
+                    UtilFunctionsIR.BITCAST);
+        }
+
+        String returnInst = UtilFunctionsIR.INDENT + "ret " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " "
+                + register;
+        GlobalVariables.output.println(returnInst);
+        GlobalVariables.output.println("}");
+
         ScopeTableHandler.scopeTable.exitScope();
     }
 

@@ -1,1 +1,3 @@
 check for redundant scopetable.
+
+change cfg of static dispatch
