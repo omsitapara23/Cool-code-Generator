@@ -22,141 +22,86 @@ class Visitor {
     // Expression visitors
 
     // Used for no_expression
-    public void traverse(AST.expression expression)
-    {
-        if(expression instanceof AST.no_expr)
-        {
+    public void traverse(AST.expression expression) {
+        if (expression instanceof AST.no_expr) {
             AST.no_expr exp = (AST.no_expr) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.assign)
-        {
+        } else if (expression instanceof AST.assign) {
             AST.assign exp = (AST.assign) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.assign)
-        {
-            AST.assign exp = (AST.assign) expression;
-            this.traverse(exp);
-        }
-        else if(expression instanceof AST.static_dispatch)
-        {
+        } else if (expression instanceof AST.static_dispatch) {
             AST.static_dispatch exp = (AST.static_dispatch) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.dispatch)
-        {
+        } else if (expression instanceof AST.dispatch) {
             AST.dispatch exp = (AST.dispatch) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.cond)
-        {
+        } else if (expression instanceof AST.cond) {
             AST.cond exp = (AST.cond) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.loop)
-        {
+        } else if (expression instanceof AST.loop) {
             AST.loop exp = (AST.loop) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.block)
-        {
+        } else if (expression instanceof AST.block) {
             AST.block exp = (AST.block) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.let)
-        {
+        } else if (expression instanceof AST.let) {
             AST.let exp = (AST.let) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.typcase)
-        {
+        } else if (expression instanceof AST.typcase) {
             AST.typcase exp = (AST.typcase) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.new_)
-        {
+        } else if (expression instanceof AST.new_) {
             AST.new_ exp = (AST.new_) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.isvoid)
-        {
+        } else if (expression instanceof AST.isvoid) {
             AST.isvoid exp = (AST.isvoid) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.plus)
-        {
+        } else if (expression instanceof AST.plus) {
             AST.plus exp = (AST.plus) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.sub)
-        {
+        } else if (expression instanceof AST.sub) {
             AST.sub exp = (AST.sub) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.mul)
-        {
+        } else if (expression instanceof AST.mul) {
             AST.mul exp = (AST.mul) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.divide)
-        {
+        } else if (expression instanceof AST.divide) {
             AST.divide exp = (AST.divide) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.comp)
-        {
+        } else if (expression instanceof AST.comp) {
             AST.comp exp = (AST.comp) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.let)
-        {
+        } else if (expression instanceof AST.let) {
             AST.let exp = (AST.let) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.lt)
-        {
+        } else if (expression instanceof AST.lt) {
             AST.lt exp = (AST.lt) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.leq)
-        {
+        } else if (expression instanceof AST.leq) {
             AST.leq exp = (AST.leq) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.eq)
-        {
+        } else if (expression instanceof AST.eq) {
             AST.eq exp = (AST.eq) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.neg)
-        {
+        } else if (expression instanceof AST.neg) {
             AST.neg exp = (AST.neg) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.object)
-        {
+        } else if (expression instanceof AST.object) {
             AST.object exp = (AST.object) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.int_const)
-        {
+        } else if (expression instanceof AST.int_const) {
             AST.int_const exp = (AST.int_const) expression;
             this.traverse(exp);
-        }
-        else if(expression instanceof AST.string_const)
-        {
+        } else if (expression instanceof AST.string_const) {
             AST.string_const exp = (AST.string_const) expression;
             this.traverse(exp);
-        }
-        else
-        {
+        } else {
             AST.bool_const exp = (AST.bool_const) expression;
             this.traverse(exp);
         }
-        
 
     }
+
     public void traverse(AST.no_expr expression) {
         expression.type = "_no_type";
 
@@ -165,9 +110,8 @@ class Visitor {
     // Visits 'ID <- expression' expression
     public void traverse(AST.assign expression) {
         // assignment expression
-        //expression.e1.accept(this);
+        // expression.e1.accept(this);
         this.traverse(expression.e1);
-
 
         if (expression.name.equals("self")) {
             GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
@@ -216,13 +160,23 @@ class Visitor {
             // expr.accept(this);
             this.traverse(expr);
         }
-
         // return type not defined
         if (GlobalVariables.inheritanceGraph.containsClass(expression.typeid) == false) {
             String errString = new StringBuilder().append("Type undefined '").append(expression.typeid).append("'")
                     .toString();
             GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
         } else if (expression.typeid.equals(caller) || Constants.ROOT_TYPE.equals(expression.typeid)) {
+            String methodMangled = UtilFunctionImpl.getMangledNameWithExpression(expression.typeid, expression.actuals,
+                    expression.name);
+            if (!GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
+                String errString = new StringBuilder().append("Undefined method '").append(expression.name)
+                        .append("' for dispatch").toString();
+                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
+                        errString);
+                expression.type = Constants.ROOT_TYPE;
+            } else {
+                expression.type = GlobalVariables.mapMangledNames.get(methodMangled);
+            }
 
         } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.typeid)
                 || InheritanceGraph.restrictedInheritanceType.contains(caller)) {
@@ -255,14 +209,14 @@ class Visitor {
                 expression.type = GlobalVariables.mapMangledNames.get(methodMangled);
             }
         }
+
     }
 
     // Visits 'expression.ID([expression [[, expression]]∗])' expression
     public void traverse(AST.dispatch expression) {
-        //expression.caller.accept(this);
+        // expression.caller.accept(this);
         this.traverse(expression.caller);
         String callingClass = expression.caller.type;
-        System.out.println(callingClass);
         // class contains no method - INT or Bool
         if (InheritanceGraph.classWithNoMethodType.contains(callingClass)) {
             GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
@@ -276,32 +230,25 @@ class Visitor {
 
         String methodMangled = UtilFunctionImpl.getMangledNameWithExpression(callingClass, expression.actuals,
                 expression.name);
-        System.out.println("methodMangled = " + methodMangled);
         String typeMethod;
         if (!GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
             typeMethod = null;
             while (typeMethod == null) {
-                System.out
-                        .println(callingClass + "   " + GlobalVariables.inheritanceGraph.giveClassIndex(callingClass));
                 callingClass = GlobalVariables.inheritanceGraph.inheritanceGraph
                         .get(GlobalVariables.inheritanceGraph.giveClassIndex(callingClass)).getASTClass().parent;
                 if (callingClass != null) {
                     methodMangled = UtilFunctionImpl.getMangledNameWithExpression(callingClass, expression.actuals,
                             expression.name);
-                    System.out.println("methodMangledinside = " + methodMangled);
                     if (GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
                         typeMethod = GlobalVariables.mapMangledNames.get(methodMangled);
-                        System.out.println("typeMangled = " + typeMethod);
                     }
                 } else {
-                    System.out.println("breaking");
                     break;
                 }
 
             }
         } else {
             typeMethod = GlobalVariables.mapMangledNames.get(methodMangled);
-            System.out.println("typeMangled2 = " + typeMethod);
         }
         if (typeMethod == null) {
             // method is not found
@@ -485,7 +432,7 @@ class Visitor {
         // defines a new scope
         ScopeTableHandler.scopeTable.enterScope();
         if (branch.name.compareTo("self") != 0) {
-            if (GlobalVariables.inheritanceGraph.containsClass(branch.type)) {
+            if (!GlobalVariables.inheritanceGraph.containsClass(branch.type)) {
                 String errString = new StringBuilder().append(" Type '").append(branch.type).append("' is not defined")
                         .toString();
                 GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, branch.getLineNo(), errString);
@@ -626,8 +573,9 @@ class Visitor {
         // expression.e2.accept(this);
         this.traverse(expression.e1);
         this.traverse(expression.e2);
-        System.out.println(expression.e1.type + "   " + expression.e2.type);
-        if (!expression.e1.type.equals(expression.e2.type)) {
+        if (!expression.e1.type.equals(expression.e2.type)
+                && (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)
+                        || InheritanceGraph.restrictedInheritanceType.contains(expression.e2.type))) {
             String errString = new StringBuilder().append("cannot comapre two diffrent types").toString();
             GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
         }
@@ -689,23 +637,25 @@ class Visitor {
             GlobalVariables.inheritanceGraph.addNewClass(cl);
         }
 
-        GlobalVariables.inheritanceGraph.checkRestrictedInheritance();
+        boolean v = GlobalVariables.inheritanceGraph.checkRestrictedInheritance();
+        if (v == true) {
+            return;
+        }
         GlobalVariables.inheritanceGraph.connectGraph();
         GlobalVariables.inheritanceGraph.checkMain();
-        for (int i = 0; i < GlobalVariables.inheritanceGraph.inheritanceGraph.size(); i++) {
-            System.out.println(GlobalVariables.inheritanceGraph.inheritanceGraph.get(i).getASTClass().name);
-        }
         GlobalVariables.inheritanceGraph.detectCycle();
         if (GlobalVariables.inheritanceGraph.getHasCycle()) {
-            ArrayList<String> cycleClass = GlobalVariables.inheritanceGraph.getCyclicClass();
-            for (int i = 0; i < cycleClass.size(); i++) {
-                String errStr = new StringBuilder().append("Cyclic Inheritance found for class '")
-                        .append(cycleClass.get(i)).append("' and its ancestors").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, 0, errStr);
-            }
 
-        } else
-            System.out.println("Has no cycle");
+            Map<String, Integer> cycleClass = GlobalVariables.inheritanceGraph.getCyclicClass();
+            Set<Map.Entry<String, Integer>> st = cycleClass.entrySet();
+            for (Map.Entry<String, Integer> me : st) {
+                String errStr = new StringBuilder().append("Cyclic Inheritance found for class '").append(me.getKey())
+                        .append("' and its ancestors").toString();
+                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, me.getValue(), errStr);
+            }
+            return;
+
+        }
 
         manglingNames();
 
@@ -718,7 +668,7 @@ class Visitor {
     private void DFSVisitor(GraphNode node) {
         ScopeTableHandler.scopeTable.enterScope();
 
-        //node.getASTClass().accept(this);
+        // node.getASTClass().accept(this);
         this.traverse(node.getASTClass());
 
         for (GraphNode children : node.getChildren()) {
@@ -736,19 +686,12 @@ class Visitor {
             for (AST.feature newfeature : newClass.features) {
                 if (newfeature instanceof AST.method) {
                     AST.method m = (AST.method) newfeature;
-                    System.out.println("name = " + m.name);
-                    String mangeledName = UtilFunctionImpl.getMangledNameWithClass(1, newClass.name, m.formals, m.name);
-                    System.out.println(mangeledName);
-                    System.out.println(m.typeid);
+                    String mangeledName = UtilFunctionImpl.getMangledNameWithClass(newClass.name, m.formals, m.name);
+
                     GlobalVariables.mapMangledNames.put(mangeledName, m.typeid);
 
                 }
-                System.out.println("dffdf");
             }
-        }
-
-        for (String key : GlobalVariables.mapMangledNames.keySet()) {
-            System.out.println(key);
         }
     }
 
@@ -773,7 +716,6 @@ class Visitor {
         if (Constants.MAIN_TYPE.equals(cl.name)) {
             String searchMain = ScopeTableHandler.scopeTable
                     .lookUpLocal(ScopeTableHandler.getMangledNameFunction("main"));
-            System.out.println("TTHEE MAINAIN I : " + searchMain);
             if (searchMain == null) {
                 GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, cl.getLineNo(),
                         "'main' method missing");
@@ -790,22 +732,18 @@ class Visitor {
         }
 
         for (AST.feature feature : cl.features) {
-            //feature.accept(this);
+            // feature.accept(this);
             this.traverse(feature);
 
         }
 
     }
 
-    public void traverse(AST.feature feature)
-    {
-        if(feature instanceof AST.method)
-        {
+    public void traverse(AST.feature feature) {
+        if (feature instanceof AST.method) {
             AST.method m = (AST.method) feature;
             this.traverse(m);
-        }
-        else
-        {
+        } else {
             AST.attr a = (AST.attr) feature;
             this.traverse(a);
         }
@@ -829,20 +767,16 @@ class Visitor {
             // this is done to continue compilation
             ScopeTableHandler.insertVar(attribute.name, Constants.ROOT_TYPE);
 
-            //attribute.value.accept(this);
+            // attribute.value.accept(this);
             this.traverse(attribute.value);
-            //this.traverse(attribute.value);
+            // this.traverse(attribute.value);
 
         } else {
 
-            //attribute.value.accept(this);
+            // attribute.value.accept(this);
             this.traverse(attribute.value);
 
             // check for no expression here------------------------
-            System.out.println(
-                    attribute.typeid + "  " + attribute.value.type + attribute.getLineNo() + "  " + attribute.value);
-            System.out.println(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.typeid) + "   "
-                    + GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type));
             if (!(attribute.value instanceof AST.no_expr)) {
                 if (attribute.typeid.equals(attribute.value.type) || Constants.ROOT_TYPE.equals(attribute.typeid)) {
 
@@ -897,16 +831,16 @@ class Visitor {
                 GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, method.getLineNo(), errString);
 
             }
-            //f.accept(this);
+            // f.accept(this);
             this.traverse(f);
 
         }
 
         // method.body.accept(this);
+        System.out.println(method.body);
         this.traverse(method.body);
+        System.out.println(method.body.type);
 
-
-        // write isconforming function here-----------------------------
         if (method.typeid.equals(method.body.type) || Constants.ROOT_TYPE.equals(method.typeid)) {
 
         } else if (!InheritanceGraph.restrictedInheritanceType.contains(method.typeid)

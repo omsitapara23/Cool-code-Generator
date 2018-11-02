@@ -69,10 +69,11 @@ class VisitorImplCodeGen {
         } else if (expression instanceof AST.string_const) {
             AST.string_const exp = (AST.string_const) expression;
             return this.traverse(exp);
-        } else {
+        } else if (expression instanceof AST.bool_const) {
             AST.bool_const exp = (AST.bool_const) expression;
             return this.traverse(exp);
         }
+        return null;
 
     }
 
@@ -514,6 +515,7 @@ class VisitorImplCodeGen {
 
     // Visits bool expression
     public String traverse(AST.bool_const expression) {
+        System.out.println(expression.lineNo);
         if(expression.value) 
             return "1";
         else 
@@ -523,6 +525,7 @@ class VisitorImplCodeGen {
     public void traverse(AST.program prog) {
 
         GlobalVariables.inheritanceGraph = new InheritanceGraph();
+        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
 
         // traversing for all AST class
         for (AST.class_ className : prog.classes) {
@@ -532,9 +535,11 @@ class VisitorImplCodeGen {
                 GlobalVariables.GlobalStringCounter++;
             }
             GlobalVariables.inheritanceGraph.addNewClass(className);
+            System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
         }
 
-        GlobalVariables.inheritanceGraph.connectGraph();
+        GlobalVariables.inheritanceGraph.connectGraphCodegen();
+        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
 
         // For all functions updating mangled name
         GlobalVariables.mapClassSize.put("Int", Constants.intSize);
@@ -586,15 +591,20 @@ class VisitorImplCodeGen {
 
         GlobalVariables.output.println();
         GlobalVariables.output.println(": Class Declarations");
+        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
         GraphNode root = GlobalVariables.inheritanceGraph.getRootNode();
         GlobalVariables.output.println(UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + " = type {i8*}");
         GlobalVariables.IndexOfVariablesForClassMap.put(Constants.ROOT_TYPE, new HashMap<>());
 
         for (GraphNode curr : root.getChildren()) {
+            System.out.println("calling for : " + curr.getASTClass().name + " by : " + root.getASTClass().name);
+
             UtilFunctionImpl.DFSprintClassToIR(curr);
         }
         GlobalVariables.output.println();
 
+        System.out.println( "fucking  : " +  ((AST.method)prog.classes.get(0).features.get(3)).body);
+        System.out.println( "fucking  : " +  ((AST.method)GlobalVariables.inheritanceGraph.getRootNode().getChildren().get(0).getChildren().get(0).getASTClass().features.get(3)).body);
         DFSVisitor(GlobalVariables.inheritanceGraph.getRootNode());
 
         // generateConstructors
@@ -605,9 +615,13 @@ class VisitorImplCodeGen {
     private void DFSVisitor(GraphNode node) {
         ScopeTableHandler.scopeTable.enterScope();
 
-        if (!(InheritanceGraph.restrictedInheritanceType.contains(node.getASTClass().name)
+       
+        if (!(InheritanceGraph.restrictedType.contains(node.getASTClass().name)
                 || node.getASTClass().name == Constants.ROOT_TYPE))
-            this.traverse(node.getASTClass());
+                {
+                    System.out.println("fuckling dfs " + ((AST.method)node.getASTClass().features.get(3)).body);
+                    this.traverse(node.getASTClass());
+                }
 
         for (GraphNode children : node.getChildren()) {
             DFSVisitor(children);
@@ -625,7 +639,7 @@ class VisitorImplCodeGen {
                 if (newfeature instanceof AST.method) {
                     AST.method m = (AST.method) newfeature;
                     System.out.println("name = " + m.name);
-                    String mangeledName = UtilFunctionImpl.getMangledNameWithClass(1, newClass.name, m.formals, m.name);
+                    String mangeledName = UtilFunctionImpl.getMangledNameWithClass(newClass.name, m.formals, m.name);
                     System.out.println(mangeledName);
                     System.out.println(m.typeid);
                     GlobalVariables.mapMangledNames.put(mangeledName, m.typeid);
@@ -650,9 +664,11 @@ class VisitorImplCodeGen {
                 AST.attr variable = (AST.attr) feature;
                 ScopeTableHandler.insertVar(variable.name, variable.typeid);
             }
-            // checking for method
+            //checking for method
             else {
+                
                 AST.method method = (AST.method) feature;
+                System.out.println("fuckling " + method.body);
                 this.traverse(method);
             }
         }
@@ -757,6 +773,7 @@ class VisitorImplCodeGen {
     public void traverse(AST.method method) {
         // a new scope, as local variables in a function hides the scope of the
         // member variables of the class
+        System.out.println("fuckling " + method.body);
         ScopeTableHandler.scopeTable.enterScope();
 
         GlobalVariables.GlobalRegisterCounter = 0;
@@ -787,7 +804,9 @@ class VisitorImplCodeGen {
         }
 
         // bitcasting
+        System.out.println(method.body);
         String register = this.traverse(method.body);
+        
         if (method.typeid.equals(method.body.type) == false) {
             register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid,
                     UtilFunctionsIR.BITCAST);

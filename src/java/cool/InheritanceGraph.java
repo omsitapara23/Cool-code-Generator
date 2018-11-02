@@ -26,7 +26,8 @@ public class InheritanceGraph
 
     private ArrayList<Boolean> visited = new ArrayList<>();
     private ArrayList<Boolean> checker = new ArrayList<>();
-    private ArrayList<String> cycleClass = new ArrayList<>();
+    private Map<String, Integer> cycleClass = new HashMap<>();
+
 
 
     public static ArrayList<String> restrictedType = new ArrayList<String>(Arrays.asList(Constants.STRING_TYPE, Constants.IO_TYPE, Constants.BOOL_TYPE, Constants.INT_TYPE));
@@ -183,7 +184,7 @@ public class InheritanceGraph
         classNameToIndex.put(Constants.BOOL_TYPE, -1);
     }
 
-    public ArrayList<String> getCyclicClass()
+    public Map<String, Integer> getCyclicClass()
     {
         return cycleClass;
     }
@@ -220,8 +221,9 @@ public class InheritanceGraph
     }
 
     //this function checks the restricted inheritance.
-    public void checkRestrictedInheritance()
+    public boolean checkRestrictedInheritance()
     {
+        boolean v = false;
         for(GraphNode currNode : inheritanceGraph)
         {
             if(currNode.getASTClass().parent != null)
@@ -230,28 +232,35 @@ public class InheritanceGraph
                 {
                     String errorStr = new StringBuilder().append("Restricted inheritance found for class '").append(currNode.getASTClass().name).append("'").append(classNameToIndex.get(currNode.getASTClass().name)).toString();
                     GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, currNode.getASTClass().getLineNo(), errorStr);
-
+                    v = true;
                 }
             }
         }
+
+        return v;
     }
 
     public void connectGraph()
     {
         for(GraphNode currNode : inheritanceGraph)
         {
+            
             if(currNode.getASTClass().parent == null)
             {
+                
                 //checking for root class itself
                 //if not the root class then all the class inherit from the root class.
                 if(!currNode.getASTClass().name.equals(Constants.ROOT_TYPE))
                 {
                     currNode.setParent(AST_ROOT_NODE);
-                    AST_ROOT_NODE.addChild(currNode);
+                    System.out.println(currNode.getIndex() + " :  " + currNode.getASTClass().name);
+                    if(!(currNode.getIndex() == 0))
+                        AST_ROOT_NODE.addChild(currNode);
                 }
             }
             else
             {
+                System.out.println(currNode.getIndex() + " :  " + currNode.getASTClass().name + " :p " + currNode.getASTClass().parent);
                 if(classNameToIndex.containsKey(currNode.getASTClass().parent))
                 {
                     //adding this node as child to the parent
@@ -268,6 +277,18 @@ public class InheritanceGraph
             }
         }
     }
+    public void connectGraphCodegen() {
+        for(GraphNode cl: inheritanceGraph) {
+            if(cl.getASTClass().parent!=null) {
+                // node has a parent
+                // System.out.println(cl.getAstClass().parent);
+                int parentIndex = classNameToIndex.get(cl.getASTClass().parent);
+                cl.setParent(inheritanceGraph.get(parentIndex));
+                if(!(cl.getIndex() == 0))
+                    inheritanceGraph.get(parentIndex).addChild(cl);
+            }
+        }
+    }
 
     public void checkMain()
     {
@@ -280,18 +301,15 @@ public class InheritanceGraph
 
     public boolean cycleUtil(int i)
     {
-        System.out.println("i = "+i);
         if(visited.get(i) == false)
         {
             visited.set(i,true);
             checker.set(i,true);
 
             List<GraphNode> temp = inheritanceGraph.get(i).getChildren();
-            System.out.println("child : " + temp.size() + " Parent, : " + i);
             for(int j = 0;j<temp.size(); j++)
             {
                 int currChild = classNameToIndex.get(temp.get(j).getASTClass().name);
-                System.out.println("child : " + currChild + temp.get(j).getASTClass().name + " Parent, : " + i);
                 if(!visited.get(currChild))
                 {
                     if(cycleUtil(currChild))
@@ -322,7 +340,8 @@ public class InheritanceGraph
             {
                 System.out.println("Set true for " + i);
                 hasCycle = true;
-                cycleClass.add(inheritanceGraph.get(i).getASTClass().name);
+                cycleClass.put(inheritanceGraph.get(i).getASTClass().name, inheritanceGraph.get(i).getASTClass().getLineNo());
+
 
             }
         }

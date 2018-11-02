@@ -61,26 +61,17 @@ class UtilFunctionImpl {
         return mangledName;
     }
 
-    public static String getMangledNameWithClass(int condition, String name, List<AST.formal> formals,
+    public static String getMangledNameWithClass(String name, List<AST.formal> formals,
             String functionName) {
         StringBuilder mangledName = new StringBuilder();
 
-        // if condition == 1 , name = className else name = type
-        if (condition == 1) {
-            // Adding class name to mangledName
-            mangledName.append("_C");
-            if (name == null)
-                mangledName.append(0);
-            else
-                mangledName.append(name.length()).append(name);
-        } else {
-            // Adding type name to mangledName
-            mangledName.append("_T");
-            if (name == null)
-                mangledName.append(0);
-            else
-                mangledName.append(name.length()).append(name);
-        }
+        // Adding class name to mangledName
+        mangledName.append("_C");
+        if (name == null)
+            mangledName.append(0);
+        else
+            mangledName.append(name.length()).append(name);
+        
 
         System.out.println(mangledName.toString());
         // Adding function name to mangledName
@@ -444,6 +435,7 @@ class UtilFunctionImpl {
 
         for(GraphNode n : curr.getChildren())
         {
+            System.out.println("calling for : " + n.getASTClass().name + " by : " + curr.getASTClass().name);
             DFSprintClassToIR(n);
         }
 

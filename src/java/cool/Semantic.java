@@ -22,7 +22,7 @@ public class Semantic extends Visitor{
 				reportError(filename, lineNo, error);
 			}
 		};
-
+		System.out.println( "  : " + program.classes.size());
 		Visitor visitor = new Visitor();
 		visitor.traverse(program);
 	}

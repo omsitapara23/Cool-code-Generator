@@ -33,15 +33,15 @@ class UtilFunctionsIR {
         if (isExisting) {
             return finalLabel;
         }
-        // if(Global.labelToCountMap.containsKey(label)) {
-        // int value = Global.labelToCountMap.get(label);
-        // finalLabel = label + "." + value;
-        // Global.labelToCountMap.put(label, Global.labelToCountMap.get(label) + 1);
-        // }
-        // else {
-        // finalLabel = label;
-        // Global.labelToCountMap.put(label,1); // TODO : check this
-        // }
+        if(GlobalVariables.labelCounterMap.containsKey(label)) {
+            int value = GlobalVariables.labelCounterMap.get(label);
+            finalLabel = label + "." + value;
+            GlobalVariables.labelCounterMap.put(label, GlobalVariables.labelCounterMap.get(label) + 1);
+        }
+        else {
+            finalLabel = label;
+            GlobalVariables.labelCounterMap.put(label,1); // TODO : check this
+        }
         return finalLabel;
     }
 

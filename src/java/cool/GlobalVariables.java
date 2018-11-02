@@ -1,6 +1,7 @@
 package cool;
 
 import java.util.*;
+
 import java.lang.StringBuilder;
 import java.io.PrintWriter;
 
@@ -56,6 +57,8 @@ public class GlobalVariables
 
     public static Set<String> formalList;
 
+    public static Map<String,Integer> labelCounterMap;
+
     static
     {
         presentClass = "";
@@ -65,6 +68,10 @@ public class GlobalVariables
         GlobalStringCounter = 0;
         GlobalRegisterCounter = 0;
         IndexOfVariablesForClassMap = new  HashMap<>();
+        labelCounterMap = new HashMap<>();
+        mapClassSize = new HashMap<>();
+        formalList = new HashSet<>();
+        mangledFunctionNames = new HashSet<>();
 
 
     }
