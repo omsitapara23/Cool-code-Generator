@@ -322,33 +322,6 @@ class VisitorImplCodeGen {
         return toReturn;
     }
 
-
-    // Visits 'ID : TYPE => expression{}'
-    // This is not an expression, but used inside case
-    public void traverse(AST.branch branch) {
-
-        // defines a new scope
-        ScopeTableHandler.scopeTable.enterScope();
-        if (branch.name.compareTo("self") != 0) {
-            if (GlobalVariables.inheritanceGraph.containsClass(branch.type)) {
-                String errString = new StringBuilder().append(" Type '").append(branch.type).append("' is not defined")
-                        .toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, branch.getLineNo(), errString);
-
-                branch.type = Constants.ROOT_TYPE;
-            }
-            ScopeTableHandler.insertVar(branch.name, branch.type);
-
-        } else {
-            // 'case' cannot bound a 'self' type
-            String errString = new StringBuilder().append(" 'case' name cannot be of type 'self'").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, branch.getLineNo(), errString);
-        }
-        // branch.value.accept(this);
-        this.traverse(branch.value);
-        ScopeTableHandler.scopeTable.exitScope();
-    }
-
     // Visits 'new TYPE' expression
     public String traverse(AST.new_ expression) {
 
@@ -686,66 +659,98 @@ class VisitorImplCodeGen {
 
     }
 
+     
     // Visits the attributes of the class
     public void traverse(AST.attr attribute) {
-        if (attribute.name.equals("self")) {
-            ScopeTableHandler.scopeTable.remove(ScopeTableHandler.getMangledNameVar(attribute.name));
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, attribute.getLineNo(),
-                    "Attribute with name 'self' cannot be defined.");
+        // creating class attribute get element pointer
+        String classAttrGepReg = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", attribute.name);
+        
+        //traversing for attribute value
+        String value = this.traverse(attribute.value);
 
-            // attribute.value.accept(this);
+        // single pointer - gep
+        if(InheritanceGraph.restrictedInheritanceType.contains(attribute.typeid) == true)
+        {
+        
+            if(value != null)
+            {
+                // storing the default value, no assignment done here
+                UtilFunctionsIR.storeInstruction(value, classAttrGepReg, UtilFunctionImpl.typeOfattr(attribute.typeid, false));
+            }
+            else
+            {
+                // assignment being performed
+                String defValue = UtilFunctionsIR.UNDEF;
+                if(attribute.typeid.equals(Constants.INT_TYPE) || attribute.typeid.equals(Constants.BOOL_TYPE))
+                    defValue = "0";
+                else if(attribute.typeid.equals(Constants.STRING_TYPE))
+                    defValue = UtilFunctionsIR.stringGEP("");
+                
+                UtilFunctionsIR.storeInstruction(defValue, classAttrGepReg, UtilFunctionImpl.typeOfattr(attribute.typeid, false));
+            }
+        }
+        // dobule pointer - gep
+        else
+        {
+            
+            if(value != null)
+            {
+                // assignemnt being performed
+                if(attribute.value.type.equals(attribute.typeid) == false)
+                {
+                    if(InheritanceGraph.restrictedInheritanceType.contains(attribute.value.type) && attribute.typeid.equals(Constants.ROOT_TYPE))
+                    {
+                        // attribute.value.type is primitive, hence we need to create a new object, as they cant be stored in object struct directly
 
-        } else if (!GlobalVariables.inheritanceGraph.containsClass(attribute.typeid)) {
-            String errString = new StringBuilder().append("Attribute '").append(attribute.name).append("' type '")
-                    .append(attribute.typeid).append("' has not been defined.").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, attribute.getLineNo(), errString);
+                        AST.new_ objCreated = new AST.new_(Constants.ROOT_TYPE, 0);
+                        //setting its type to root type
+                        objCreated.type = Constants.ROOT_TYPE;
+                        
+                        value = this.traverse(objCreated);
 
-            // For this case, we set the type id of attribute to ROOT_TYPE
-            // this is done to continue compilation
-            ScopeTableHandler.insertVar(attribute.name, Constants.ROOT_TYPE);
+                        String gepName = UtilFunctionsIR.typeNameGEP(value);
+                        
+                        String gepString = UtilFunctionsIR.stringGEP(attribute.value.type);
 
-            // attribute.value.accept(this);
-            this.traverse(attribute.value);
-            // this.traverse(attribute.value);
-
-        } else {
-
-            // attribute.value.accept(this);
-            this.traverse(attribute.value);
-
-            // check for no expression here------------------------
-            System.out.println(
-                    attribute.typeid + "  " + attribute.value.type + attribute.getLineNo() + "  " + attribute.value);
-            System.out.println(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.typeid) + "   "
-                    + GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type));
-            if (!(attribute.value instanceof AST.no_expr)) {
-                if (attribute.typeid.equals(attribute.value.type) || Constants.ROOT_TYPE.equals(attribute.typeid)) {
-
-                } else if (!InheritanceGraph.restrictedInheritanceType.contains(attribute.typeid)
-                        && !InheritanceGraph.restrictedInheritanceType.contains(attribute.value.type)) {
-                    if (!UtilFunctionImpl.typeChecker(attribute.typeid, attribute.value.type,
-                            GlobalVariables.inheritanceGraph.inheritanceGraph
-                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.typeid)),
-                            GlobalVariables.inheritanceGraph.inheritanceGraph
-                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type)))) {
-                        String errString = new StringBuilder().append("Attribute '").append(attribute.name)
-                                .append("' type '").append(attribute.typeid)
-                                .append("' does not match to its expression.").toString();
-                        GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, attribute.getLineNo(),
-                                errString);
+                        UtilFunctionsIR.storeInstruction(gepString, gepName, "i8*");
                     }
-                } else {
-                    String errString = new StringBuilder().append("Attribute '").append(attribute.name)
-                            .append("' type '").append(attribute.typeid).append("' does not match to its expression.")
-                            .toString();
-                    GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, attribute.getLineNo(),
-                            errString);
+                    else
+                    {
+                        String presentClass = GlobalVariables.inheritanceGraph.inheritanceGraph
+                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type)).getASTClass().parent;
+
+                        String ancesstorClass = attribute.value.type;
+
+                        // iterate until presentClass is same as attribute.typeid
+                        while(attribute.typeid.equals(presentClass) == false)
+                        {
+                            value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass, UtilFunctionsIR.BITCAST);
+                            
+                            ancesstorClass = presentClass;
+                            // going towards parent
+                            presentClass = GlobalVariables.inheritanceGraph.inheritanceGraph
+                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(presentClass)).getASTClass().parent;
+                        }
+
+                        value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid, UtilFunctionsIR.BITCAST);
+                    }
+
+                    UtilFunctionsIR.doublePointerStoreInstruction(value, classAttrGepReg, attribute.typeid);
+                }
+                else
+                {
+                    
+                    UtilFunctionsIR.doublePointerStoreInstruction(value, classAttrGepReg, attribute.typeid);
 
                 }
             }
+            else
+            {
 
+                // storing null for pointer as assignment is not performed
+                UtilFunctionsIR.doublePointerStoreInstruction("null", classAttrGepReg, attribute.typeid);
+            }
         }
-
     }
 
     // Visits the method of the class
