@@ -304,6 +304,18 @@ class UtilFunctionImpl {
             return UtilFunctionImpl.getIRNameForClass(type);
     }
 
+    public static String primitiveValue(String type) {
+        if(Constants.INT_TYPE.equals(type)) {
+            return "0";
+        } else if(Constants.BOOL_TYPE.equals(type)) {
+            return "0";
+        } else if(Constants.STRING_TYPE.equals(type)) {
+            return UtilFunctionsIR.stringGEP("");
+        } else {
+            return "undef";
+        }
+    }
+
     public static void defaultStringsAppend() {
         if (GlobalVariables.GlobalStringToIRMap.containsKey("\n") == false) {
             GlobalVariables.GlobalStringToIRMap.put("\n", "@.str." + GlobalVariables.GlobalStringCounter);

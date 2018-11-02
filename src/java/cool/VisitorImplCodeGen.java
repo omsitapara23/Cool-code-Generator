@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 class VisitorImplCodeGen {
-    /*
-     * NOTE: to know about the individual visit functions Check Visitor.java
-     */
 
     // Expression visitors
 
@@ -21,9 +18,6 @@ class VisitorImplCodeGen {
         } else if (expression instanceof AST.static_dispatch) {
             AST.static_dispatch exp = (AST.static_dispatch) expression;
             return this.traverse(exp);
-        } else if (expression instanceof AST.dispatch) {
-            AST.dispatch exp = (AST.dispatch) expression;
-            return this.traverse(exp);
         } else if (expression instanceof AST.cond) {
             AST.cond exp = (AST.cond) expression;
             return this.traverse(exp);
@@ -32,12 +26,6 @@ class VisitorImplCodeGen {
             return this.traverse(exp);
         } else if (expression instanceof AST.block) {
             AST.block exp = (AST.block) expression;
-            return this.traverse(exp);
-        } else if (expression instanceof AST.let) {
-            AST.let exp = (AST.let) expression;
-            return this.traverse(exp);
-        } else if (expression instanceof AST.typcase) {
-            AST.typcase exp = (AST.typcase) expression;
             return this.traverse(exp);
         } else if (expression instanceof AST.new_) {
             AST.new_ exp = (AST.new_) expression;
@@ -59,9 +47,6 @@ class VisitorImplCodeGen {
             return this.traverse(exp);
         } else if (expression instanceof AST.comp) {
             AST.comp exp = (AST.comp) expression;
-            return this.traverse(exp);
-        } else if (expression instanceof AST.let) {
-            AST.let exp = (AST.let) expression;
             return this.traverse(exp);
         } else if (expression instanceof AST.lt) {
             AST.lt exp = (AST.lt) expression;
@@ -202,92 +187,30 @@ class VisitorImplCodeGen {
             }
             nearestMethod = temp;
 
-
             // method is not present in the same class, so bitcast is needed
-            if(expression.caller.type.equals(nearestMethod) == false)
-            {
-                traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type, nearestMethod, UtilFunctionsIR.BITCAST);
+            if (expression.caller.type.equals(nearestMethod) == false) {
+                traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type,
+                        nearestMethod, UtilFunctionsIR.BITCAST);
             }
 
             StringBuilder br = new StringBuilder();
             br.append(UtilFunctionImpl.typeOfattr(nearestMethod, true)).append(" ").append(traverseCaller);
 
             // traversing for formals of expression.actuals
-            for(AST.expression formal : expression.actuals)
-            {
+            for (AST.expression formal : expression.actuals) {
                 br.append(", ").append(UtilFunctionImpl.typeOfattr(formal.type, true));
-                br.append(" ").append(this.traverse(formal)); 
+                br.append(" ").append(this.traverse(formal));
             }
 
             // invoking the method
 
-            return(UtilFunctionsIR.CallInstruction(expression.type, UtilFunctionImpl.getMangledNameWithClassAndFunction(nearestMethod, expression.name), br.toString()));
-
+            return (UtilFunctionsIR.CallInstruction(expression.type,
+                    UtilFunctionImpl.getMangledNameWithClassAndFunction(nearestMethod, expression.name),
+                    br.toString()));
 
         } else {
             return defaultMethodIR;
 
-        }
-
-    }
-
-    
-
-    // Visits 'expression.ID([expression [[, expression]]∗])' expression
-    public void traverse(AST.dispatch expression) {
-        // expression.caller.accept(this);
-        this.traverse(expression.caller);
-        String callingClass = expression.caller.type;
-        System.out.println(callingClass);
-        // class contains no method - INT or Bool
-        if (InheritanceGraph.classWithNoMethodType.contains(callingClass)) {
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                    "Method is not defined '" + expression.name + "'");
-            return;
-        }
-
-        for (AST.expression e : expression.actuals)
-            // e.accept(this);
-            this.traverse(e);
-
-        String methodMangled = UtilFunctionImpl.getMangledNameWithExpression(callingClass, expression.actuals,
-                expression.name);
-        System.out.println("methodMangled = " + methodMangled);
-        String typeMethod;
-        if (!GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
-            typeMethod = null;
-            while (typeMethod == null) {
-                System.out
-                        .println(callingClass + "   " + GlobalVariables.inheritanceGraph.giveClassIndex(callingClass));
-                callingClass = GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(callingClass)).getASTClass().parent;
-                if (callingClass != null) {
-                    methodMangled = UtilFunctionImpl.getMangledNameWithExpression(callingClass, expression.actuals,
-                            expression.name);
-                    System.out.println("methodMangledinside = " + methodMangled);
-                    if (GlobalVariables.mapMangledNames.containsKey(methodMangled)) {
-                        typeMethod = GlobalVariables.mapMangledNames.get(methodMangled);
-                        System.out.println("typeMangled = " + typeMethod);
-                    }
-                } else {
-                    System.out.println("breaking");
-                    break;
-                }
-
-            }
-        } else {
-            typeMethod = GlobalVariables.mapMangledNames.get(methodMangled);
-            System.out.println("typeMangled2 = " + typeMethod);
-        }
-        if (typeMethod == null) {
-            // method is not found
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                    "Method signature undefined for '" + expression.name + "'");
-            // to run without errors
-            expression.type = Constants.ROOT_TYPE;
-
-        } else {
-            expression.type = typeMethod;
         }
 
     }
@@ -303,10 +226,10 @@ class VisitorImplCodeGen {
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
 
         String joinTypeResult = UtilFunctionImpl.joinTypesOf(expression.ifbody.type, expression.elsebody.type,
-        GlobalVariables.inheritanceGraph.inheritanceGraph
-                .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
-        GlobalVariables.inheritanceGraph.inheritanceGraph
-                .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
+                GlobalVariables.inheritanceGraph.inheritanceGraph
+                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
+                GlobalVariables.inheritanceGraph.inheritanceGraph
+                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
 
         String allocaReturn = UtilFunctionsIR.allocaInstruction(joinTypeResult, null);
 
@@ -320,185 +243,85 @@ class VisitorImplCodeGen {
 
         UtilFunctionsIR.LabelCreator(labelIfThen);
         String ifbody = this.traverse(expression.ifbody);
-        if(expression.ifbody.type.equals(joinTypeResult) == false)
-        {
-            ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult, UtilFunctionsIR.BITCAST);
+        if (expression.ifbody.type.equals(joinTypeResult) == false) {
+            ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult,
+                    UtilFunctionsIR.BITCAST);
         }
-        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
-        {
-            UtilFunctionsIR.storeInstruction(UtilFunctionsIR.loadInstruction(ifbody, UtilFunctionImpl.typeOfattr(joinTypeResult, false) ), allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
-        }
-        else
-        {
+        if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
+            UtilFunctionsIR.storeInstruction(
+                    UtilFunctionsIR.loadInstruction(ifbody, UtilFunctionImpl.typeOfattr(joinTypeResult, false)),
+                    allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        } else {
             UtilFunctionsIR.storeInstruction(ifbody, allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
         }
 
         UtilFunctionsIR.breakInstruction(labelIfEnd);
 
-
         // generating for if-else
 
         UtilFunctionsIR.LabelCreator(labelIfElse);
         String elsebody = this.traverse(expression.elsebody);
-        if(expression.elsebody.type.equals(joinTypeResult) == false)
-        {
-            elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult, UtilFunctionsIR.BITCAST);
+        if (expression.elsebody.type.equals(joinTypeResult) == false) {
+            elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult,
+                    UtilFunctionsIR.BITCAST);
         }
-        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
-        {
-            UtilFunctionsIR.storeInstruction(UtilFunctionsIR.loadInstruction(elsebody, UtilFunctionImpl.typeOfattr(joinTypeResult, false) ), allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
-        }
-        else
-        {
-            UtilFunctionsIR.storeInstruction(elsebody, allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
+            UtilFunctionsIR.storeInstruction(
+                    UtilFunctionsIR.loadInstruction(elsebody, UtilFunctionImpl.typeOfattr(joinTypeResult, false)),
+                    allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false));
+        } else {
+            UtilFunctionsIR.storeInstruction(elsebody, allocaReturn,
+                    UtilFunctionImpl.typeOfattr(joinTypeResult, false));
         }
 
         UtilFunctionsIR.breakInstruction(labelIfEnd);
 
-        //generating for if-end
+        // generating for if-end
         UtilFunctionsIR.LabelCreator(labelIfEnd);
-        if(!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult))
-        {
+        if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
             return allocaReturn;
-        }
-        else
-        {
-            return(UtilFunctionsIR.loadInstruction(allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false)));
+        } else {
+            return (UtilFunctionsIR.loadInstruction(allocaReturn, UtilFunctionImpl.typeOfattr(joinTypeResult, false)));
         }
     }
 
     // Visits 'while expression loop expression pool' expression
-    public void traverse(AST.loop expression) {
+    public String traverse(AST.loop expression) {
 
-        // accepting for loop body and predicate
-        // expression.predicate.accept(this);
-        // expression.body.accept(this);
-        this.traverse(expression.predicate);
+        String loopCondition = UtilFunctionsIR.LabelGenerator("loop.cond", false);
+        String loopBody = UtilFunctionsIR.LabelGenerator("loop.body", false);
+        String loopExit = UtilFunctionsIR.LabelGenerator("loop.exit", false);
+
+        // creating the loop entry
+        UtilFunctionsIR.breakInstruction(loopCondition);
+        UtilFunctionsIR.LabelCreator(loopCondition);
+
+        String loopPredicate = this.traverse(expression.predicate);
+
+        String loopSwitcher = UtilFunctionsIR.convertInstruction(loopPredicate, "i8", "i1", UtilFunctionsIR.TRUNC);
+
+        UtilFunctionsIR.conditionalBreakInstruction(loopSwitcher, loopBody, loopExit);
+
+        UtilFunctionsIR.LabelCreator(loopBody);
         this.traverse(expression.body);
-        if (expression.predicate.type.compareTo(Constants.BOOL_TYPE) != 0) {
-            String errString = new StringBuilder().append(" loop predicate type does not match will bool type")
-                    .toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
 
-        // to prevent errors
-        expression.type = Constants.ROOT_TYPE;
+        UtilFunctionsIR.breakInstruction(loopCondition);
+        UtilFunctionsIR.LabelCreator(loopExit);
+        return "null";
+
     }
 
     // Visits '{ [expression{}]+ }' expression
-    public void traverse(AST.block expression) {
+    public String traverse(AST.block expression) {
 
-        for (AST.expression e : expression.l1) {
-            // e.accept(this);
-            this.traverse(e);
-        }
-        // type of block is defined as type of last expression
-        expression.type = expression.l1.get(expression.l1.size() - 1).type;
-
-    }
-
-    // Visits 'let ID : TYPE [<-expression] in expression' expression
-    // NOTE: muliple ID declaration is converted to nested let by parser
-    public void traverse(AST.let expression) {
-
-        // let expression defines a new scope
-        ScopeTableHandler.scopeTable.enterScope();
-
-        if (expression.name.compareTo("self") != 0) {
-            if (GlobalVariables.inheritanceGraph.containsClass(expression.typeid) == false) {
-                // the defined type does not exist
-                String errString = new StringBuilder().append("'").append(expression.typeid).append("' is not defined ")
-                        .toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                        errString);
-
-                // to run the code without errors
-                expression.typeid = Constants.ROOT_TYPE;
-
-            }
-
-            ScopeTableHandler.insertVar(expression.name, expression.typeid);
-
-            // assignment is possible
-            if (!(expression.value instanceof AST.no_expr)) {
-                // expression is visited
-                // expression.value.accept(this);
-                this.traverse(expression.value);
-
-                // assignment and variable type checking
-                if (expression.typeid.equals(expression.value.type) || Constants.ROOT_TYPE.equals(expression.typeid)) {
-
-                } else if (!InheritanceGraph.restrictedInheritanceType.contains(expression.typeid)
-                        && !InheritanceGraph.restrictedInheritanceType.contains(expression.value.type)) {
-                    if (!UtilFunctionImpl.typeChecker(expression.typeid, expression.value.type,
-                            GlobalVariables.inheritanceGraph.inheritanceGraph
-                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.typeid)),
-                            GlobalVariables.inheritanceGraph.inheritanceGraph
-                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.value.type)))) {
-                        String errString = new StringBuilder().append("Type of attribute '")
-                                .append(expression.value.type).append("' and expression type '").append(expression.type)
-                                .append("' do not equate").toString();
-                        GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                                errString);
-
-                    }
-                } else {
-                    String errString = new StringBuilder().append("Type of attribute '").append(expression.value.type)
-                            .append("' and expression type '").append(expression.type).append("' do not equate")
-                            .toString();
-                    GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                            errString);
-                }
-
-            }
-        } else {
-            // 'let' expression cannot bound 'self'
-            String errString = new StringBuilder().append(" expression name cannot be of type 'self'").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-
+        String toReturn = null;
+        for (AST.expression curr_expr : expression.l1) {
+            toReturn = this.traverse(curr_expr);
         }
 
-        // accepting for 'let' body
-        // expression.body.accept(this);
-        this.traverse(expression.body);
-        expression.type = expression.body.type;
-        ScopeTableHandler.scopeTable.exitScope();
-
+        return toReturn;
     }
 
-    // Visits 'case expression of [ID : TYPE => expression{}]+ esac' expression
-    public void traverse(AST.typcase expression) {
-
-        // join of all branches gives us the type of typecase expression
-        // expression.predicate.accept(this);
-        this.traverse(expression.predicate);
-
-        // here we accept and then joining types of all other branches
-        for (int i = 0; i < expression.branches.size(); i++) {
-            // expression.branches.get(i).accept(this);
-            this.traverse(expression.branches.get(i));
-
-            // for first index we need to compute separately
-            if (i == 0) {
-                expression.type = expression.branches.get(i).value.type;
-            } else {
-                if (expression.type.equals(expression.branches.get(i).value.type)) {
-                    expression.type = expression.branches.get(i).value.type;
-                } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.type)
-                        || InheritanceGraph.restrictedInheritanceType.contains(expression.branches.get(i).value.type)) {
-                    expression.type = Constants.ROOT_TYPE;
-                } else {
-                    expression.type = UtilFunctionImpl.joinTypesOf(expression.type,
-                            expression.branches.get(i).value.type,
-                            GlobalVariables.inheritanceGraph.inheritanceGraph
-                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.type)),
-                            GlobalVariables.inheritanceGraph.inheritanceGraph.get(GlobalVariables.inheritanceGraph
-                                    .giveClassIndex(expression.branches.get(i).value.type)));
-                }
-
-            }
-        }
-    }
 
     // Visits 'ID : TYPE => expression{}'
     // This is not an expression, but used inside case
@@ -527,177 +350,201 @@ class VisitorImplCodeGen {
     }
 
     // Visits 'new TYPE' expression
-    public void traverse(AST.new_ expression) {
+    public String traverse(AST.new_ expression) {
 
-        if (GlobalVariables.inheritanceGraph.containsClass(expression.typeid)) {
-            expression.type = expression.typeid;
-        } else {
-            String errString = new StringBuilder().append(" Type '").append(expression.typeid)
-                    .append("' is not defined").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-
-            // to run without errors
-            expression.type = Constants.ROOT_TYPE;
+        if (InheritanceGraph.restrictedInheritanceType.contains(expression.typeid)) {
+            return UtilFunctionImpl.primitiveValue(expression.typeid);
         }
+
+        // calculating the bytes to allocate
+        String sizeOfAllocation = GlobalVariables.mapClassSize.get(expression.typeid).toString();
+
+        // calculating the register in which value is to be stored
+        String registerToStore = UtilFunctionsIR.mallocInstruction(sizeOfAllocation);
+
+        // register in which the allocated bytes are type casted
+        String toReturn = UtilFunctionsIR.convertInstruction(registerToStore, "i8*", expression.typeid,
+                UtilFunctionsIR.BITCAST);
+
+        // calling the constructor
+        UtilFunctionsIR.voidCallInstruction(UtilFunctionImpl.getMangledNameWithClassAndFunction(expression.typeid, expression.typeid),
+                UtilFunctionImpl.getIRNameForClass(expression.typeid) + "* " + toReturn);
+
+        // store the name here
+        String objBitcast = toReturn;
+        if (Constants.ROOT_TYPE.equals(expression.typeid) == false)
+            objBitcast = UtilFunctionsIR.convertInstruction(toReturn, expression.typeid, Constants.ROOT_TYPE,
+                    UtilFunctionsIR.BITCAST);
+
+        //uncomment this three lines if this code not work
+        // String typenameGEP = UtilFunctionsIR.typeNameGEP(objBitcast);
+        // String typenameString = UtilFunctionsIR.stringGEP(expression.typeid);
+        // UtilFunctionsIR.storeInstruction(typenameString, typenameGEP, "i8*");
+        return toReturn;
+
     }
 
     // Visits 'isvoid expression' expression
-    public void traverse(AST.isvoid expression) {
+    public String traverse(AST.isvoid expression) {
 
         // expression.e1.accept(this);
-        this.traverse(expression.e1);
+        String toReturn =  this.traverse(expression.e1);
 
-        // assigning type to bool type
-        expression.type = Constants.BOOL_TYPE;
+        if(InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
+            return "0";
+        }
+        String outBin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, toReturn, "null", expression.e1.type, false, false);
+        return UtilFunctionsIR.convertInstruction(outBin, "i1", "i8", UtilFunctionsIR.ZEXT);
     }
 
     // Visits 'expression + expression' expression
-    public void traverse(AST.plus expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
+    public String traverse(AST.plus expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
 
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("Addition called on non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.INT_TYPE;
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, first, second, expression.type, false, true);
+        return toReturn;
     }
 
     // Visits 'expression - expression' expression
-    public void traverse(AST.sub expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
+    public String traverse(AST.sub expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
 
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("Subtraction called on non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.INT_TYPE;
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, first, second, expression.type, false, true);
+        return toReturn;
     }
 
     // Visits 'expression * expression' expression
-    public void traverse(AST.mul expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
+    public String traverse(AST.mul expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
 
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("Multiplication called on non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.INT_TYPE;
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.MUL, first, second, expression.type, false, true);
+        return toReturn;
     }
 
     // Visits 'expression / expression' expression
-    public void traverse(AST.divide expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("Division called on non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.INT_TYPE;
+    public String traverse(AST.divide expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
+
+        // generating labels for different branches that we are going to construct.
+        String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
+
+        String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
+
+        String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
+
+        // divide by 0 check
+        String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, second, "0",
+                Constants.INT_TYPE, false, false);
+
+        UtilFunctionsIR.conditionalBreakInstruction(compare, labelIfThen, labelIfElse);
+
+        UtilFunctionsIR.LabelCreator(labelIfThen);
+        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "i32 " + expression.lineNo);
+        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
+
+        UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+        UtilFunctionsIR.LabelCreator(labelIfElse);
+        UtilFunctionsIR.breakInstruction(labelIfEnd);
+
+        UtilFunctionsIR.LabelCreator(labelIfEnd);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.DIV, first, second, expression.type, false, false);
+        return toReturn;
     }
 
     // Visits 'not expression' expression
-    public void traverse(AST.comp expression) {
-        // expression.e1.accept(this);
-        this.traverse(expression.e1);
-        if (!Constants.BOOL_TYPE.equals(expression.e1.type)) {
-            String errString = new StringBuilder().append("Compliment of bool type found").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.BOOL_TYPE;
+    public String traverse(AST.comp expression) {
+        String first = this.traverse(expression.e1);
+
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.XOR, first, "1", expression.e1.type, false, false);
+        return toReturn;
     }
 
     // Visits 'expression < expression' expression
-    public void traverse(AST.lt expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("cannot comapre two non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.BOOL_TYPE;
+    public String traverse(AST.lt expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
+
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        return toReturn;
     }
 
     // Visits 'expression <= expression' expression
-    public void traverse(AST.leq expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
-        if (!Constants.INT_TYPE.equals(expression.e1.type) || !Constants.INT_TYPE.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("cannot comapre two non int types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.BOOL_TYPE;
+    public String traverse(AST.leq expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
+
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        return toReturn;
     }
 
-    public void traverse(AST.eq expression) {
-        // expression.e1.accept(this);
-        // expression.e2.accept(this);
-        this.traverse(expression.e1);
-        this.traverse(expression.e2);
-        System.out.println(expression.e1.type + "   " + expression.e2.type);
-        if (!expression.e1.type.equals(expression.e2.type)) {
-            String errString = new StringBuilder().append("cannot comapre two diffrent types").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.BOOL_TYPE;
+    public String traverse(AST.eq expression) {
+        String first = this.traverse(expression.e1);
+        String second = this.traverse(expression.e2);
+
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        return toReturn;
     }
 
     // Visits '~expression' expression
-    public void traverse(AST.neg expression) {
-        // expression.e1.accept(this);
-        this.traverse(expression.e1);
-        if (!Constants.INT_TYPE.equals(expression.e1.type)) {
-            String errString = new StringBuilder().append("cannot negate non int type").toString();
-            GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(), errString);
-        }
-        expression.type = Constants.INT_TYPE;
+    public String traverse(AST.neg expression) {
+        String first = this.traverse(expression.e1);
+
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, "0", first, expression.type, false, true);
+        return out_bin;
     }
 
     // Visits 'ID' expression
-    public void traverse(AST.object expression) {
-        if (expression.name.equals("self")) {
-            expression.type = GlobalVariables.presentClass;
-        } else {
-            String ty = ScopeTableHandler.scopeTable.lookUpGlobal(ScopeTableHandler.getMangledNameVar(expression.name));
-            if (ty == null) {
-                expression.type = Constants.ROOT_TYPE;
-                String errString = new StringBuilder().append("No defination for '").append(expression.name)
-                        .append("' found").toString();
-                GlobalVariables.errorReporter.report(GlobalVariables.presentFilename, expression.getLineNo(),
-                        errString);
-            } else
-                expression.type = ty;
+    public String traverse(AST.object expression) {
+        if("self".equals(expression.name))
+        {
+            return "%this";
+        }
+
+        if(GlobalVariables.formalList.contains(expression.name))
+        {
+            return UtilFunctionsIR.loadInstruction("%" + expression.name + ".addr", UtilFunctionImpl.typeOfattr(expression.type, false));
+        }
+        else
+        {
+            String pointerToObject = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);
+            if(InheritanceGraph.restrictedInheritanceType.contains(expression.type))
+            {
+                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject, UtilFunctionImpl.typeOfattr(expression.type, true));
+            }
+            else
+            {
+                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject, UtilFunctionImpl.typeOfattr(expression.type, true) + "*");
+            }
+
+            return pointerToObject;
         }
 
     }
 
     // Visits integer expression
-    public void traverse(AST.int_const expression) {
-        expression.type = Constants.INT_TYPE;
+    public String traverse(AST.int_const expression) {
+        return String.valueOf(expression.value);
     }
 
     // Visits string expression
-    public void traverse(AST.string_const expression) {
-        expression.type = Constants.STRING_TYPE;
+    public String traverse(AST.string_const expression) {
+        return UtilFunctionsIR.stringGEP(expression.value);
     }
 
     // Visits bool expression
-    public void traverse(AST.bool_const expression) {
-        expression.type = Constants.BOOL_TYPE;
+    public String traverse(AST.bool_const expression) {
+        if(expression.value) 
+            return "1";
+        else 
+            return "0";
     }
 
     public void traverse(AST.program prog) {
