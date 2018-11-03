@@ -618,6 +618,10 @@ class Visitor {
 
     // Visits string expression
     public void traverse(AST.string_const expression) {
+        if(!GlobalVariables.GlobalStringToIRMap.containsKey(expression.value)) {
+			GlobalVariables.GlobalStringToIRMap.put(expression.value, "@.str."+GlobalVariables.GlobalStringCounter);
+			GlobalVariables.GlobalStringCounter++;
+		}
         expression.type = Constants.STRING_TYPE;
     }
 

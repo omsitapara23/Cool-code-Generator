@@ -11,9 +11,9 @@ public class Constants
     public static final String MAIN_TYPE = "Main";
 
     public static final String ERROR_DIVIDE_BY_ZERO = "Exception Divide By Zero Found at line - ";
-    public static final String FUNCTION_DIVIDE_BY_ZERO = "Exception Divide By Zero Function Error Found at line - ";
+    public static final String FUNCTION_DIVIDE_BY_ZERO = "print_div_by_zero_err_msg";
     public static final String ERROR_VOID_CALL = "VOID Dispatach Found at line - ";
-    public static final String FUNCTION_VOID_CALL = "VOID Dispatch error on Function Call at line - ";
+    public static final String FUNCTION_VOID_CALL = "print_dispatch_on_void_error";
     public static final String ABORT_MSSG = "ABORT Message called from class ";
 
     public static int intSize = 4;

@@ -9,7 +9,7 @@ public class Codegen{
         out.println();
         GlobalVariables.output = out;
 		VisitorImplCodeGen visitor = new VisitorImplCodeGen();
-		System.out.println( "  : " +  ((AST.method)program.classes.get(0).features.get(3)).body);
+		//System.out.println( "  : " +  ((AST.method)program.classes.get(0).features.get(3)).body);
 		visitor.traverse(program);
 		
 	}

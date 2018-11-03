@@ -14,8 +14,8 @@ public class InheritanceGraph
 
     // index of the root node
     private static final int INDEX_ROOT_CLASS = 0;
-    private static AST.class_ AST_ROOT_CLASS = new AST.class_(Constants.ROOT_TYPE, null, null, new ArrayList<>(), 0);
-    private static GraphNode AST_ROOT_NODE = new GraphNode(AST_ROOT_CLASS, INDEX_ROOT_CLASS);
+    private static AST.class_ AST_ROOT_CLASS;
+    private static GraphNode AST_ROOT_NODE;
 
     // our inheritance graph containining list of nodes
     public ArrayList <GraphNode> inheritanceGraph;
@@ -46,7 +46,10 @@ public class InheritanceGraph
         containsMain = false;
         classNameToIndex = new HashMap<>();
         inheritanceGraph = new ArrayList<>();
+        AST_ROOT_CLASS = new AST.class_(Constants.ROOT_TYPE, null, null, new ArrayList<>(), 0);
+        AST_ROOT_NODE = new GraphNode(AST_ROOT_CLASS, INDEX_ROOT_CLASS);
         addBasicClass();
+        
     }
 
     public boolean containsMain()
@@ -193,6 +196,7 @@ public class InheritanceGraph
 
     public void addNewClass(AST.class_ newClass)
     {
+        System.out.println("Adding : " + newClass.name);
         //checking for class redefination
         if(classNameToIndex.containsKey(newClass.name))
         {
@@ -284,8 +288,7 @@ public class InheritanceGraph
                 // System.out.println(cl.getAstClass().parent);
                 int parentIndex = classNameToIndex.get(cl.getASTClass().parent);
                 cl.setParent(inheritanceGraph.get(parentIndex));
-                if(!(cl.getIndex() == 0))
-                    inheritanceGraph.get(parentIndex).addChild(cl);
+                inheritanceGraph.get(parentIndex).addChild(cl);
             }
         }
     }

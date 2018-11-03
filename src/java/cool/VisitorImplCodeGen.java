@@ -104,6 +104,7 @@ class VisitorImplCodeGen {
             }
 
             else {
+                System.out.println("sending : assign " + expression.e1.type);
                 newType = UtilFunctionsIR.convertInstruction(returnString, expression.e1.type, varToStoreType,
                         UtilFunctionsIR.BITCAST);
             }
@@ -190,6 +191,7 @@ class VisitorImplCodeGen {
 
             // method is not present in the same class, so bitcast is needed
             if (expression.caller.type.equals(nearestMethod) == false) {
+                System.out.println(" sending : static " + expression.caller.type);
                 traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type,
                         nearestMethod, UtilFunctionsIR.BITCAST);
             }
@@ -225,12 +227,21 @@ class VisitorImplCodeGen {
         String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
 
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
-
-        String joinTypeResult = UtilFunctionImpl.joinTypesOf(expression.ifbody.type, expression.elsebody.type,
-                GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
-                GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
+        String joinTypeResult;
+        if(InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type) == InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type))
+        {
+            joinTypeResult = expression.ifbody.type;
+        }
+        else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
+                || InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type)) {
+            joinTypeResult = Constants.ROOT_TYPE;
+        } else {
+            joinTypeResult = UtilFunctionImpl.joinTypesOf(expression.ifbody.type, expression.elsebody.type,
+                    GlobalVariables.inheritanceGraph.inheritanceGraph
+                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.ifbody.type)),
+                    GlobalVariables.inheritanceGraph.inheritanceGraph
+                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(expression.elsebody.type)));
+        }
 
         String allocaReturn = UtilFunctionsIR.allocaInstruction(joinTypeResult, null);
 
@@ -245,6 +256,7 @@ class VisitorImplCodeGen {
         UtilFunctionsIR.LabelCreator(labelIfThen);
         String ifbody = this.traverse(expression.ifbody);
         if (expression.ifbody.type.equals(joinTypeResult) == false) {
+            System.out.println(" sending : ifbody " + expression.ifbody.type);
             ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult,
                     UtilFunctionsIR.BITCAST);
         }
@@ -263,6 +275,7 @@ class VisitorImplCodeGen {
         UtilFunctionsIR.LabelCreator(labelIfElse);
         String elsebody = this.traverse(expression.elsebody);
         if (expression.elsebody.type.equals(joinTypeResult) == false) {
+            System.out.println(" sending : elsebody " + expression.elsebody.type);
             elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult,
                     UtilFunctionsIR.BITCAST);
         }
@@ -341,19 +354,24 @@ class VisitorImplCodeGen {
                 UtilFunctionsIR.BITCAST);
 
         // calling the constructor
-        UtilFunctionsIR.voidCallInstruction(UtilFunctionImpl.getMangledNameWithClassAndFunction(expression.typeid, expression.typeid),
+        UtilFunctionsIR.voidCallInstruction(
+                UtilFunctionImpl.getMangledNameWithClassAndFunction(expression.typeid, expression.typeid),
                 UtilFunctionImpl.getIRNameForClass(expression.typeid) + "* " + toReturn);
 
         // store the name here
         String objBitcast = toReturn;
         if (Constants.ROOT_TYPE.equals(expression.typeid) == false)
+        {
+            System.out.println("sending : new " + expression.typeid);
             objBitcast = UtilFunctionsIR.convertInstruction(toReturn, expression.typeid, Constants.ROOT_TYPE,
                     UtilFunctionsIR.BITCAST);
+        }
+            
 
-        //uncomment this three lines if this code not work
-        // String typenameGEP = UtilFunctionsIR.typeNameGEP(objBitcast);
-        // String typenameString = UtilFunctionsIR.stringGEP(expression.typeid);
-        // UtilFunctionsIR.storeInstruction(typenameString, typenameGEP, "i8*");
+        // uncomment this three lines if this code not work
+        String typenameGEP = UtilFunctionsIR.typeNameGEP(objBitcast);
+        String typenameString = UtilFunctionsIR.stringGEP(expression.typeid);
+        UtilFunctionsIR.storeInstruction(typenameString, typenameGEP, "i8*");
         return toReturn;
 
     }
@@ -362,12 +380,13 @@ class VisitorImplCodeGen {
     public String traverse(AST.isvoid expression) {
 
         // expression.e1.accept(this);
-        String toReturn =  this.traverse(expression.e1);
+        String toReturn = this.traverse(expression.e1);
 
-        if(InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
+        if (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
             return "0";
         }
-        String outBin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, toReturn, "null", expression.e1.type, false, false);
+        String outBin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, toReturn, "null", expression.e1.type,
+                false, false);
         return UtilFunctionsIR.convertInstruction(outBin, "i1", "i8", UtilFunctionsIR.ZEXT);
     }
 
@@ -376,7 +395,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, first, second, expression.type, false, true);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, first, second, expression.type, false,
+                true);
         return toReturn;
     }
 
@@ -385,7 +405,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, first, second, expression.type, false, true);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, first, second, expression.type, false,
+                true);
         return toReturn;
     }
 
@@ -394,7 +415,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.MUL, first, second, expression.type, false, true);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.MUL, first, second, expression.type, false,
+                true);
         return toReturn;
     }
 
@@ -411,13 +433,13 @@ class VisitorImplCodeGen {
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
 
         // divide by 0 check
-        String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, second, "0",
-                Constants.INT_TYPE, false, false);
+        String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, second, "0", Constants.INT_TYPE, false,
+                false);
 
         UtilFunctionsIR.conditionalBreakInstruction(compare, labelIfThen, labelIfElse);
 
         UtilFunctionsIR.LabelCreator(labelIfThen);
-        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "i32 " + expression.lineNo);
+        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_DIVIDE_BY_ZERO, "i32 " + expression.lineNo);
         GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
 
         UtilFunctionsIR.breakInstruction(labelIfEnd);
@@ -426,7 +448,8 @@ class VisitorImplCodeGen {
         UtilFunctionsIR.breakInstruction(labelIfEnd);
 
         UtilFunctionsIR.LabelCreator(labelIfEnd);
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.DIV, first, second, expression.type, false, false);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.DIV, first, second, expression.type, false,
+                false);
         return toReturn;
     }
 
@@ -434,7 +457,8 @@ class VisitorImplCodeGen {
     public String traverse(AST.comp expression) {
         String first = this.traverse(expression.e1);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.XOR, first, "1", expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.XOR, first, "1", expression.e1.type, false,
+                false);
         return toReturn;
     }
 
@@ -443,7 +467,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
+                false, false);
         String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
         return toReturn;
     }
@@ -453,7 +478,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
+                false, false);
         String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
         return toReturn;
     }
@@ -462,7 +488,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type, false, false);
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
+                false, false);
         String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
         return toReturn;
     }
@@ -471,31 +498,29 @@ class VisitorImplCodeGen {
     public String traverse(AST.neg expression) {
         String first = this.traverse(expression.e1);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, "0", first, expression.type, false, true);
+        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, "0", first, expression.type, false,
+                true);
         return out_bin;
     }
 
     // Visits 'ID' expression
     public String traverse(AST.object expression) {
-        if("self".equals(expression.name))
-        {
+        if ("self".equals(expression.name)) {
             return "%this";
         }
 
-        if(GlobalVariables.formalList.contains(expression.name))
-        {
-            return UtilFunctionsIR.loadInstruction("%" + expression.name + ".addr", UtilFunctionImpl.typeOfattr(expression.type, false));
-        }
-        else
-        {
-            String pointerToObject = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);
-            if(InheritanceGraph.restrictedInheritanceType.contains(expression.type))
-            {
-                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject, UtilFunctionImpl.typeOfattr(expression.type, true));
-            }
-            else
-            {
-                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject, UtilFunctionImpl.typeOfattr(expression.type, true) + "*");
+        if (GlobalVariables.formalList.contains(expression.name)) {
+            return UtilFunctionsIR.loadInstruction("%" + expression.name + ".addr",
+                    UtilFunctionImpl.typeOfattr(expression.type, true));
+        } else {
+            String pointerToObject = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this",
+                    expression.name);
+            if (InheritanceGraph.restrictedInheritanceType.contains(expression.type)) {
+                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject,
+                        UtilFunctionImpl.typeOfattr(expression.type, false));
+            } else {
+                pointerToObject = UtilFunctionsIR.loadInstruction(pointerToObject,
+                        UtilFunctionImpl.typeOfattr(expression.type, false) + "*");
             }
 
             return pointerToObject;
@@ -515,10 +540,10 @@ class VisitorImplCodeGen {
 
     // Visits bool expression
     public String traverse(AST.bool_const expression) {
-        System.out.println(expression.lineNo);
-        if(expression.value) 
+        // System.out.println(expression.lineNo);
+        if (expression.value)
             return "1";
-        else 
+        else
             return "0";
     }
 
@@ -526,19 +551,23 @@ class VisitorImplCodeGen {
 
         GlobalVariables.inheritanceGraph = new InheritanceGraph();
         System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
 
         // traversing for all AST class
         for (AST.class_ className : prog.classes) {
             if (GlobalVariables.GlobalStringToIRMap.containsKey(className.name) == false) {
                 GlobalVariables.GlobalStringToIRMap.put(className.name,
-                        "@.str. " + GlobalVariables.GlobalStringCounter);
+                        "@.str." + GlobalVariables.GlobalStringCounter);
                 GlobalVariables.GlobalStringCounter++;
             }
             GlobalVariables.inheritanceGraph.addNewClass(className);
-            System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+             System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+             System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         }
-
+        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         GlobalVariables.inheritanceGraph.connectGraphCodegen();
+        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
 
         // For all functions updating mangled name
@@ -582,7 +611,7 @@ class VisitorImplCodeGen {
 
         for (Map.Entry<String, String> itr : GlobalVariables.GlobalStringToIRMap.entrySet()) {
             // Uncomment the below line if error comes ----------
-            // buildingBlocks.setLength(0);
+            buildingBlocks.setLength(0);
 
             GlobalVariables.output.println(buildingBlocks.append(itr.getValue())
                     .append(" = private unnamed_addr constant [").append(itr.getKey().length() + 1).append(" x i8] c\"")
@@ -590,38 +619,101 @@ class VisitorImplCodeGen {
         }
 
         GlobalVariables.output.println();
-        GlobalVariables.output.println(": Class Declarations");
-        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+        GlobalVariables.output.println("; Class Declarations");
+        // System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
         GraphNode root = GlobalVariables.inheritanceGraph.getRootNode();
         GlobalVariables.output.println(UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + " = type {i8*}");
         GlobalVariables.IndexOfVariablesForClassMap.put(Constants.ROOT_TYPE, new HashMap<>());
 
         for (GraphNode curr : root.getChildren()) {
-            System.out.println("calling for : " + curr.getASTClass().name + " by : " + root.getASTClass().name);
+            // System.out.println("calling for : " + curr.getASTClass().name + " by : " +
+            // root.getASTClass().name);
 
             UtilFunctionImpl.DFSprintClassToIR(curr);
         }
         GlobalVariables.output.println();
 
-        System.out.println( "fucking  : " +  ((AST.method)prog.classes.get(0).features.get(3)).body);
-        System.out.println( "fucking  : " +  ((AST.method)GlobalVariables.inheritanceGraph.getRootNode().getChildren().get(0).getChildren().get(0).getASTClass().features.get(3)).body);
+        // System.out.println( "fucking : " +
+        // ((AST.method)prog.classes.get(0).features.get(3)).body);
+        // System.out.println( "fucking : " +
+        // ((AST.method)GlobalVariables.inheritanceGraph.getRootNode().getChildren().get(0).getChildren().get(0).getASTClass().features.get(3)).body);
         DFSVisitor(GlobalVariables.inheritanceGraph.getRootNode());
 
         // generateConstructors
+        DFSGenerateConstructors(GlobalVariables.inheritanceGraph.getRootNode());
         // generate DEFAULt methodss
+        UtilFunctionsIR.generateDefaultMethods();
+
+    }
+
+    private void DFSGenerateConstructors(GraphNode node)
+    {
+        ScopeTableHandler.scopeTable.enterScope();
+
+        AST.class_ cl = node.getASTClass();
+
+        if(InheritanceGraph.restrictedInheritanceType.contains(cl.name) == true)
+        {
+            return ;
+        }
+
+        //reinitializing some global variables 
+        GlobalVariables.GlobalRegisterCounter = 0;
+        GlobalVariables.presentClass = cl.name;
+        GlobalVariables.labelCounterMap.clear();
+        GlobalVariables.output.println("\n; Constructor of class '" +cl.name+"'" + "\ndefine void @" + UtilFunctionImpl.getMangledNameWithClassAndFunction(cl.name, cl.name)+ "(" + UtilFunctionImpl.getIRNameForClass(cl.name) + "* %this) {");
+        UtilFunctionsIR.LabelCreator("entry");
+
+        // creating for parent constructor i.e calling parent constructor
+        String parentName = GlobalVariables.inheritanceGraph.inheritanceGraph
+        .get(GlobalVariables.inheritanceGraph.giveClassIndex(cl.name)).getASTClass().parent;
+        if(parentName != null)
+        {
+            System.out.println("constructio : " + cl.name);
+            UtilFunctionsIR.constructorCall(parentName, UtilFunctionsIR.convertInstruction("%this", cl.name, parentName, UtilFunctionsIR.BITCAST));
+        }
+
+        // now we visit for each attribute of AST.attr
+        for(AST.feature f : cl.features)
+        {
+            if(f instanceof AST.attr)
+            {
+                ScopeTableHandler.scopeTable.insert(((AST.attr)f).name, ((AST.attr)f).typeid);
+            }
+        }
+
+        for(AST.feature f : cl.features)
+        {
+            if(f instanceof AST.attr)
+            {
+                AST.attr a = (AST.attr)f;
+
+                this.traverse(a);
+            }
+        }
+
+        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "ret void" + "\n}");
+        
+        // traversing in a dfs fashion for children
+        for(GraphNode children : node.getChildren())
+        {
+            System.out.println(children.getASTClass().name + " : " + node.getASTClass().name);
+            DFSGenerateConstructors(children);
+        }
+
+        ScopeTableHandler.scopeTable.exitScope();
 
     }
 
     private void DFSVisitor(GraphNode node) {
         ScopeTableHandler.scopeTable.enterScope();
 
-       
         if (!(InheritanceGraph.restrictedType.contains(node.getASTClass().name)
-                || node.getASTClass().name == Constants.ROOT_TYPE))
-                {
-                    System.out.println("fuckling dfs " + ((AST.method)node.getASTClass().features.get(3)).body);
-                    this.traverse(node.getASTClass());
-                }
+                || node.getASTClass().name == Constants.ROOT_TYPE)) {
+            // System.out.println("fuckling dfs " +
+            // ((AST.method)node.getASTClass().features.get(3)).body);
+            this.traverse(node.getASTClass());
+        }
 
         for (GraphNode children : node.getChildren()) {
             DFSVisitor(children);
@@ -664,104 +756,98 @@ class VisitorImplCodeGen {
                 AST.attr variable = (AST.attr) feature;
                 ScopeTableHandler.insertVar(variable.name, variable.typeid);
             }
-            //checking for method
+            // checking for method
             else {
-                
+
                 AST.method method = (AST.method) feature;
-                System.out.println("fuckling " + method.body);
+                // System.out.println("fuckling " + method.body);
                 this.traverse(method);
             }
         }
 
     }
 
-     
     // Visits the attributes of the class
     public void traverse(AST.attr attribute) {
         // creating class attribute get element pointer
-        String classAttrGepReg = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", attribute.name);
-        
-        //traversing for attribute value
+        String classAttrGepReg = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this",
+                attribute.name);
+
+        // traversing for attribute value
         String value = this.traverse(attribute.value);
 
         // single pointer - gep
-        if(InheritanceGraph.restrictedInheritanceType.contains(attribute.typeid) == true)
-        {
-        
-            if(value != null)
-            {
+        if (InheritanceGraph.restrictedInheritanceType.contains(attribute.typeid) == true) {
+           
+            if (value != null) {
                 // storing the default value, no assignment done here
-                UtilFunctionsIR.storeInstruction(value, classAttrGepReg, UtilFunctionImpl.typeOfattr(attribute.typeid, false));
-            }
-            else
-            {
+                UtilFunctionsIR.storeInstruction(value, classAttrGepReg,
+                        UtilFunctionImpl.typeOfattr(attribute.typeid, false));
+            } else {
                 // assignment being performed
                 String defValue = UtilFunctionsIR.UNDEF;
-                if(attribute.typeid.equals(Constants.INT_TYPE) || attribute.typeid.equals(Constants.BOOL_TYPE))
+                if (attribute.typeid.equals(Constants.INT_TYPE) || attribute.typeid.equals(Constants.BOOL_TYPE))
                     defValue = "0";
-                else if(attribute.typeid.equals(Constants.STRING_TYPE))
+                else if (attribute.typeid.equals(Constants.STRING_TYPE))
                     defValue = UtilFunctionsIR.stringGEP("");
-                
-                UtilFunctionsIR.storeInstruction(defValue, classAttrGepReg, UtilFunctionImpl.typeOfattr(attribute.typeid, false));
+
+                UtilFunctionsIR.storeInstruction(defValue, classAttrGepReg,
+                        UtilFunctionImpl.typeOfattr(attribute.typeid, false));
             }
         }
         // dobule pointer - gep
-        else
-        {
-            
-            if(value != null)
-            {
+        else {
+            System.out.println(" printing -- " + attribute.typeid + " value = " + value);
+            if (value != null) {
                 // assignemnt being performed
-                if(attribute.value.type.equals(attribute.typeid) == false)
-                {
-                    if(InheritanceGraph.restrictedInheritanceType.contains(attribute.value.type) && attribute.typeid.equals(Constants.ROOT_TYPE))
-                    {
-                        // attribute.value.type is primitive, hence we need to create a new object, as they cant be stored in object struct directly
+                if (attribute.value.type.equals(attribute.typeid) == false) {
+                    if (InheritanceGraph.restrictedInheritanceType.contains(attribute.value.type)
+                            && attribute.typeid.equals(Constants.ROOT_TYPE)) {
+                        // attribute.value.type is primitive, hence we need to create a new object, as
+                        // they cant be stored in object struct directly
 
                         AST.new_ objCreated = new AST.new_(Constants.ROOT_TYPE, 0);
-                        //setting its type to root type
+                        // setting its type to root type
                         objCreated.type = Constants.ROOT_TYPE;
-                        
+
                         value = this.traverse(objCreated);
 
                         String gepName = UtilFunctionsIR.typeNameGEP(value);
-                        
+
                         String gepString = UtilFunctionsIR.stringGEP(attribute.value.type);
 
                         UtilFunctionsIR.storeInstruction(gepString, gepName, "i8*");
-                    }
-                    else
-                    {
+                    } else {
                         String presentClass = GlobalVariables.inheritanceGraph.inheritanceGraph
-                        .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type)).getASTClass().parent;
+                                .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type))
+                                .getASTClass().parent;
 
                         String ancesstorClass = attribute.value.type;
 
                         // iterate until presentClass is same as attribute.typeid
-                        while(attribute.typeid.equals(presentClass) == false)
-                        {
-                            value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass, UtilFunctionsIR.BITCAST);
-                            
+                        while (attribute.typeid.equals(presentClass) == false) {
+                            System.out.println("attr: " + ancesstorClass);
+                            value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass,
+                                    UtilFunctionsIR.BITCAST);
+
                             ancesstorClass = presentClass;
                             // going towards parent
                             presentClass = GlobalVariables.inheritanceGraph.inheritanceGraph
-                            .get(GlobalVariables.inheritanceGraph.giveClassIndex(presentClass)).getASTClass().parent;
+                                    .get(GlobalVariables.inheritanceGraph.giveClassIndex(presentClass))
+                                    .getASTClass().parent;
                         }
-
-                        value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid, UtilFunctionsIR.BITCAST);
+                        System.out.println("attr: " + ancesstorClass);
+                        value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid,
+                                UtilFunctionsIR.BITCAST);
                     }
 
                     UtilFunctionsIR.doublePointerStoreInstruction(value, classAttrGepReg, attribute.typeid);
-                }
-                else
-                {
-                    
+                } else {
+
                     UtilFunctionsIR.doublePointerStoreInstruction(value, classAttrGepReg, attribute.typeid);
 
                 }
-            }
-            else
-            {
+            } else {
 
                 // storing null for pointer as assignment is not performed
                 UtilFunctionsIR.doublePointerStoreInstruction("null", classAttrGepReg, attribute.typeid);
@@ -773,7 +859,7 @@ class VisitorImplCodeGen {
     public void traverse(AST.method method) {
         // a new scope, as local variables in a function hides the scope of the
         // member variables of the class
-        System.out.println("fuckling " + method.body);
+        // System.out.println("fuckling " + method.body);
         ScopeTableHandler.scopeTable.enterScope();
 
         GlobalVariables.GlobalRegisterCounter = 0;
@@ -797,17 +883,18 @@ class VisitorImplCodeGen {
 
         // traversing the formal list
         for (AST.formal f : method.formals) {
-            UtilFunctionsIR.allocaInstruction(UtilFunctionImpl.typeOfattr(f.typeid, true), f.name + " .addr");
-            UtilFunctionsIR.storeInstruction("%" + f.name, "%" + f.name + " .addr",
+            UtilFunctionsIR.allocaInstruction(UtilFunctionImpl.typeOfattr(f.typeid, true), f.name + ".addr");
+            UtilFunctionsIR.storeInstruction("%" + f.name, "%" + f.name + ".addr",
                     UtilFunctionImpl.typeOfattr(f.typeid, true));
 
         }
 
         // bitcasting
-        System.out.println(method.body);
+        // System.out.println(method.body);
         String register = this.traverse(method.body);
-        
+
         if (method.typeid.equals(method.body.type) == false) {
+            System.out.println("method body: " + method.body.type);
             register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid,
                     UtilFunctionsIR.BITCAST);
         }
