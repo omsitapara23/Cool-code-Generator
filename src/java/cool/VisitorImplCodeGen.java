@@ -112,7 +112,7 @@ class VisitorImplCodeGen {
 
         if (GlobalVariables.formalList.contains(expression.name)) {
             // directly taking the function parameter
-            varToStore = "%" + expression.name + " .addr";
+            varToStore = "%" + expression.name + ".addr";
         } else {
             // GEP
             varToStore = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);

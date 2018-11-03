@@ -88,7 +88,7 @@ Completed
 %class.Object = type {i8*}
 %class.IO = type { %class.Object }
 %class.SimpleExprTests = type { %class.IO, i32, i8, %class.Object*, i32, %class.Object* }
-%class.Main = type { %class.Object, %class.SimpleExprTests*, %class.SimpleExprTests* }
+%class.Main = type { %class.Object, %class.SimpleExprTests* }
 
 
 ; Class: SimpleExprTests, Method: binOpTest
@@ -99,16 +99,11 @@ entry:
   store i32 %x, i32* %x.addr, align 4
   %y.addr = alloca i32, align 8
   store i32 %y, i32* %y.addr, align 4
-  %0 = load i32, i32* %x.addr, align 4
-  %1 = load i32, i32* %y.addr, align 4
-  %2 = add nsw i32 %0, %1
-  %3 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 1
-  store i32 %2, i32* %3, align 4
-  %4 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %4, label %if.then, label %if.else
+  %0 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %0, label %if.then, label %if.else
 
 if.then:
-  call void @print_dispatch_on_void_error(i32 11)
+  call void @print_dispatch_on_void_error(i32 10)
   call void @exit(i32 1)
   br label %if.end
 
@@ -116,14 +111,14 @@ if.else:
   br label %if.end
 
 if.end:
-  %5 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %6 = getelementptr inbounds [38 x i8], [38 x i8]* @.str.0, i32 0, i32 0
-  %7 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %5, i8* %6)
-  %8 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %8, label %if.then.1, label %if.else.1
+  %1 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %2 = getelementptr inbounds [38 x i8], [38 x i8]* @.str.0, i32 0, i32 0
+  %3 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %1, i8* %2)
+  %4 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %4, label %if.then.1, label %if.else.1
 
 if.then.1:
-  call void @print_dispatch_on_void_error(i32 12)
+  call void @print_dispatch_on_void_error(i32 11)
   call void @exit(i32 1)
   br label %if.end.1
 
@@ -131,14 +126,14 @@ if.else.1:
   br label %if.end.1
 
 if.end.1:
-  %9 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %10 = getelementptr inbounds [16 x i8], [16 x i8]* @.str.1, i32 0, i32 0
-  %11 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %9, i8* %10)
-  %12 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %12, label %if.then.2, label %if.else.2
+  %5 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %6 = getelementptr inbounds [16 x i8], [16 x i8]* @.str.1, i32 0, i32 0
+  %7 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %5, i8* %6)
+  %8 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %8, label %if.then.2, label %if.else.2
 
 if.then.2:
-  call void @print_dispatch_on_void_error(i32 13)
+  call void @print_dispatch_on_void_error(i32 12)
   call void @exit(i32 1)
   br label %if.end.2
 
@@ -146,14 +141,14 @@ if.else.2:
   br label %if.end.2
 
 if.end.2:
-  %13 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %14 = load i32, i32* %x.addr, align 4
-  %15 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %13, i32 %14)
-  %16 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %16, label %if.then.3, label %if.else.3
+  %9 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %10 = load i32, i32* %x.addr, align 4
+  %11 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %9, i32 %10)
+  %12 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %12, label %if.then.3, label %if.else.3
 
 if.then.3:
-  call void @print_dispatch_on_void_error(i32 14)
+  call void @print_dispatch_on_void_error(i32 13)
   call void @exit(i32 1)
   br label %if.end.3
 
@@ -161,14 +156,14 @@ if.else.3:
   br label %if.end.3
 
 if.end.3:
-  %17 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %18 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.2, i32 0, i32 0
-  %19 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %17, i8* %18)
-  %20 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %20, label %if.then.4, label %if.else.4
+  %13 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %14 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.2, i32 0, i32 0
+  %15 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %13, i8* %14)
+  %16 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %16, label %if.then.4, label %if.else.4
 
 if.then.4:
-  call void @print_dispatch_on_void_error(i32 15)
+  call void @print_dispatch_on_void_error(i32 14)
   call void @exit(i32 1)
   br label %if.end.4
 
@@ -176,14 +171,14 @@ if.else.4:
   br label %if.end.4
 
 if.end.4:
-  %21 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %22 = load i32, i32* %y.addr, align 4
-  %23 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %21, i32 %22)
-  %24 = icmp eq %class.SimpleExprTests* %this, null
-  br i1 %24, label %if.then.5, label %if.else.5
+  %17 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %18 = load i32, i32* %y.addr, align 4
+  %19 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %17, i32 %18)
+  %20 = icmp eq %class.SimpleExprTests* %this, null
+  br i1 %20, label %if.then.5, label %if.else.5
 
 if.then.5:
-  call void @print_dispatch_on_void_error(i32 16)
+  call void @print_dispatch_on_void_error(i32 15)
   call void @exit(i32 1)
   br label %if.end.5
 
@@ -191,9 +186,14 @@ if.else.5:
   br label %if.end.5
 
 if.end.5:
-  %25 = bitcast %class.SimpleExprTests* %this to %class.IO*
-  %26 = getelementptr inbounds [8 x i8], [8 x i8]* @.str.3, i32 0, i32 0
-  %27 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %25, i8* %26)
+  %21 = bitcast %class.SimpleExprTests* %this to %class.IO*
+  %22 = getelementptr inbounds [8 x i8], [8 x i8]* @.str.3, i32 0, i32 0
+  %23 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %21, i8* %22)
+  %24 = load i32, i32* %x.addr, align 4
+  %25 = load i32, i32* %y.addr, align 4
+  %26 = add nsw i32 %24, %25
+  %27 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 1
+  store i32 %26, i32* %27, align 4
   %28 = icmp eq %class.SimpleExprTests* %this, null
   br i1 %28, label %if.then.6, label %if.else.6
 
@@ -1278,7 +1278,7 @@ entry:
   br i1 %2, label %if.then.66, label %if.else.66
 
 if.then.66:
-  call void @print_dispatch_on_void_error(i32 137)
+  call void @print_dispatch_on_void_error(i32 136)
   call void @exit(i32 1)
   br label %if.end.66
 
@@ -1293,7 +1293,7 @@ if.end.66:
   br i1 %6, label %if.then.67, label %if.else.67
 
 if.then.67:
-  call void @print_dispatch_on_void_error(i32 138)
+  call void @print_dispatch_on_void_error(i32 137)
   call void @exit(i32 1)
   br label %if.end.67
 
@@ -1308,7 +1308,7 @@ if.end.67:
   br i1 %10, label %if.then.68, label %if.else.68
 
 if.then.68:
-  call void @print_dispatch_on_void_error(i32 139)
+  call void @print_dispatch_on_void_error(i32 138)
   call void @exit(i32 1)
   br label %if.end.68
 
@@ -1323,7 +1323,7 @@ if.end.68:
   br i1 %14, label %if.then.69, label %if.else.69
 
 if.then.69:
-  call void @print_dispatch_on_void_error(i32 140)
+  call void @print_dispatch_on_void_error(i32 139)
   call void @exit(i32 1)
   br label %if.end.69
 
@@ -1338,7 +1338,7 @@ if.end.69:
   br i1 %18, label %if.then.70, label %if.else.70
 
 if.then.70:
-  call void @print_dispatch_on_void_error(i32 141)
+  call void @print_dispatch_on_void_error(i32 140)
   call void @exit(i32 1)
   br label %if.end.70
 
@@ -1353,7 +1353,7 @@ if.end.70:
   br i1 %22, label %if.then.71, label %if.else.71
 
 if.then.71:
-  call void @print_dispatch_on_void_error(i32 142)
+  call void @print_dispatch_on_void_error(i32 141)
   call void @exit(i32 1)
   br label %if.end.71
 
@@ -1415,15 +1415,6 @@ entry:
   %6 = getelementptr inbounds [16 x i8], [16 x i8]* @.str.32, i32 0, i32 0
   store i8* %6, i8** %5, align 8
   store %class.SimpleExprTests* %3, %class.SimpleExprTests** %1, align 4
-  %7 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 2
-  %8 = call noalias i8* @malloc(i64 41)
-  %9 = bitcast i8* %8 to %class.SimpleExprTests*
-  call void @_CSimpleExprTests15_FSimpleExprTests15_(%class.SimpleExprTests* %9)
-  %10 = bitcast %class.SimpleExprTests* %9 to %class.Object*
-  %11 = getelementptr inbounds %class.Object, %class.Object* %10, i32 0, i32 0
-  %12 = getelementptr inbounds [16 x i8], [16 x i8]* @.str.32, i32 0, i32 0
-  store i8* %12, i8** %11, align 8
-  store %class.SimpleExprTests* %9, %class.SimpleExprTests** %7, align 4
   ret void
 }
 

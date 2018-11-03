@@ -424,7 +424,7 @@ class UtilFunctionsIR {
                     + "(%class.Main* %main)\n").append(" ret i32 %retval\n");
         } else {
             cmethod.append(" %dummyretval = call " + UtilFunctionImpl.typeOfattr(GlobalVariables.mainRet, true) + " @"
-                    + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "Main") + "(%class.Main* %main)\n")
+                    + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "main") + "(%class.Main* %main)\n")
                     .append(" ret i32 0");
         }
         cmethod.append("}\n");
