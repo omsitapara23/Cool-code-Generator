@@ -435,20 +435,18 @@ class UtilFunctionsIR {
     {
         GlobalVariables.GlobalRegisterCounter = 0;
         StringBuilder voidDispatch = new StringBuilder();
-        voidDispatch.append("\ndefine void @" + Constants.FUNCTION_VOID_CALL +"(i32 %lineNo) {\nentry:\n");
+        voidDispatch.append("\ndefine void @" + Constants.FUNCTION_VOID_CALL +"() {\nentry:\n");
         GlobalVariables.output.print(voidDispatch.toString());
         String s1 = stringGEP("%s");
         String s2 = stringGEP(Constants.ERROR_VOID_CALL);
         GlobalVariables.output.println(" %"+ GlobalVariables.GlobalRegisterCounter + " = call i32 (i8*, ...) @printf(i8* " + s1 + ", i8* " + s2 + ")");
         GlobalVariables.GlobalRegisterCounter++;
 
-        String s3 = stringGEP("%d");
-        GlobalVariables.output.println(" %"+GlobalVariables.GlobalRegisterCounter+" = call i32 (i8*, ...) @printf(i8* " + s3 + ", i32 %lineNo)");
-        GlobalVariables.GlobalRegisterCounter++;
-
         String s4 = stringGEP("\n");
         GlobalVariables.output.println(" %"+GlobalVariables.GlobalRegisterCounter+" = call i32 (i8*, ...) @printf(i8* " + s1 + ", i8* " + s4 + ")");
         GlobalVariables.GlobalRegisterCounter++;
+
+        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
 
         GlobalVariables.output.println(" ret void");
         GlobalVariables.output.println("}");
@@ -458,7 +456,7 @@ class UtilFunctionsIR {
     {
         GlobalVariables.GlobalRegisterCounter = 0;
         StringBuilder voidDispatch = new StringBuilder();
-        voidDispatch.append("\ndefine void @" + Constants.FUNCTION_DIVIDE_BY_ZERO +"(i32 %lineNo) {\nentry:\n");
+        voidDispatch.append("\ndefine void @" + Constants.FUNCTION_DIVIDE_BY_ZERO +"() {\nentry:\n");
         GlobalVariables.output.print(voidDispatch.toString());
 
         String s1 = stringGEP("%s");
@@ -466,14 +464,11 @@ class UtilFunctionsIR {
         GlobalVariables.output.println(" %"+ GlobalVariables.GlobalRegisterCounter + " = call i32 (i8*, ...) @printf(i8* " + s1 + ", i8* " + s2 + ")");
         GlobalVariables.GlobalRegisterCounter++;
 
-        String s3 = stringGEP("%d");
-        GlobalVariables.output.println(" %"+GlobalVariables.GlobalRegisterCounter+" = call i32 (i8*, ...) @printf(i8* " + s3 + ", i32 %lineNo)");
-        GlobalVariables.GlobalRegisterCounter++;
-
         String s4 = stringGEP("\n");
         GlobalVariables.output.println(" %"+GlobalVariables.GlobalRegisterCounter+" = call i32 (i8*, ...) @printf(i8* " + s1 + ", i8* " + s4 + ")");
         GlobalVariables.GlobalRegisterCounter++;
 
+        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
         GlobalVariables.output.println(" ret void");
         GlobalVariables.output.println("}");
     }

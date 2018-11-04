@@ -112,7 +112,7 @@ class VisitorImplCodeGen {
 
         if (GlobalVariables.formalList.contains(expression.name)) {
             // directly taking the function parameter
-            varToStore = "%" + expression.name + ".addr";
+             varToStore = "%" + expression.name + ".addr";
         } else {
             // GEP
             varToStore = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);
@@ -155,26 +155,14 @@ class VisitorImplCodeGen {
             String traverseCaller = this.traverse(expression.caller);
             if (InheritanceGraph.restrictedInheritanceType.contains(expression.caller.type) == false) {
                 // generating labels for different branches that we are going to construct.
-                String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
 
-                String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
-
-                String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
+                String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
                 // null comparison
                 String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, traverseCaller, "null",
                         expression.caller.type, false, false);
 
-                UtilFunctionsIR.conditionalBreakInstruction(compare, labelIfThen, labelIfElse);
-
-                UtilFunctionsIR.LabelCreator(labelIfThen);
-                UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "i32 " + expression.lineNo);
-                GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
-
-                UtilFunctionsIR.breakInstruction(labelIfEnd);
-
-                UtilFunctionsIR.LabelCreator(labelIfElse);
-                UtilFunctionsIR.breakInstruction(labelIfEnd);
+                UtilFunctionsIR.conditionalBreakInstruction(compare, "static.void", labelIfEnd);
 
                 UtilFunctionsIR.LabelCreator(labelIfEnd);
             }
@@ -222,11 +210,11 @@ class VisitorImplCodeGen {
     public String traverse(AST.cond expression) {
 
         // generating labels for different branches that we are going to construct.
-        String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
+        String labelIfThen = UtilFunctionsIR.LabelGenerator("cond.true", false);
 
-        String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
+        String labelIfElse = UtilFunctionsIR.LabelGenerator("cond.false", false);
 
-        String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
+        String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
         String joinTypeResult;
         if(InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type) == InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type))
         {
@@ -426,26 +414,14 @@ class VisitorImplCodeGen {
         String second = this.traverse(expression.e2);
 
         // generating labels for different branches that we are going to construct.
-        String labelIfThen = UtilFunctionsIR.LabelGenerator("if.then", false);
 
-        String labelIfElse = UtilFunctionsIR.LabelGenerator("if.else", false);
-
-        String labelIfEnd = UtilFunctionsIR.LabelGenerator("if.end", false);
+        String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
         // divide by 0 check
         String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, second, "0", Constants.INT_TYPE, false,
                 false);
 
-        UtilFunctionsIR.conditionalBreakInstruction(compare, labelIfThen, labelIfElse);
-
-        UtilFunctionsIR.LabelCreator(labelIfThen);
-        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_DIVIDE_BY_ZERO, "i32 " + expression.lineNo);
-        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "call void @exit(i32 1)");
-
-        UtilFunctionsIR.breakInstruction(labelIfEnd);
-
-        UtilFunctionsIR.LabelCreator(labelIfElse);
-        UtilFunctionsIR.breakInstruction(labelIfEnd);
+        UtilFunctionsIR.conditionalBreakInstruction(compare, "division.0", labelIfEnd);
 
         UtilFunctionsIR.LabelCreator(labelIfEnd);
         String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.DIV, first, second, expression.type, false,
@@ -555,11 +531,6 @@ class VisitorImplCodeGen {
 
         // traversing for all AST class
         for (AST.class_ className : prog.classes) {
-            if (GlobalVariables.GlobalStringToIRMap.containsKey(className.name) == false) {
-                GlobalVariables.GlobalStringToIRMap.put(className.name,
-                        "@.str." + GlobalVariables.GlobalStringCounter);
-                GlobalVariables.GlobalStringCounter++;
-            }
             GlobalVariables.inheritanceGraph.addNewClass(className);
              System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
              System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
@@ -863,6 +834,7 @@ class VisitorImplCodeGen {
         ScopeTableHandler.scopeTable.enterScope();
 
         GlobalVariables.GlobalRegisterCounter = 0;
+        String methodBody = UtilFunctionsIR.LabelGenerator("method.body", true);
 
         if (GlobalVariables.presentClass.equals("Main") && ("main").equals(method.name)) {
             GlobalVariables.mainRet = method.typeid;
@@ -889,8 +861,22 @@ class VisitorImplCodeGen {
 
         }
 
+        
+        UtilFunctionsIR.breakInstruction(methodBody);
+
+
+        UtilFunctionsIR.LabelCreator("static.void");
+        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "");
+        UtilFunctionsIR.breakInstruction(methodBody);
+
+        UtilFunctionsIR.LabelCreator("division.0");
+        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_DIVIDE_BY_ZERO,"");
+        UtilFunctionsIR.breakInstruction(methodBody);
+
+
         // bitcasting
         // System.out.println(method.body);
+        UtilFunctionsIR.LabelCreator(methodBody);
         String register = this.traverse(method.body);
 
         if (method.typeid.equals(method.body.type) == false) {
