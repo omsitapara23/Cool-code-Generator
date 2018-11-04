@@ -100,13 +100,13 @@ class VisitorImplCodeGen {
             else {
                 System.out.println("sending : assign " + expression.e1.type);
                 newType = UtilFunctionsIR.convertInstruction(returnString, expression.e1.type, varToStoreType,
-                        UtilFunctionsIR.BITCAST);
+                        "bitcast");
             }
         }
 
         if (GlobalVariables.formalList.contains(expression.name)) {
             // directly taking the function parameter
-             varToStore = "%" + expression.name + ".addr";
+            varToStore = "%" + expression.name + ".addr";
         } else {
             // GEP
             varToStore = UtilFunctionsIR.classAttributeGEP(GlobalVariables.presentClass, "%this", expression.name);
@@ -132,7 +132,7 @@ class VisitorImplCodeGen {
             String callInst = UtilFunctionsIR.CallInstruction("i64", "strlen",
                     "i8* " + this.traverse(expression.caller));
             // Here we are using the strlen function defined in C for handling length.
-            ir = UtilFunctionsIR.convertInstruction(callInst, "i64", "i32", UtilFunctionsIR.TRUNC);
+            ir = UtilFunctionsIR.convertInstruction(callInst, "i64", "i32", "trunc");
 
         }
 
@@ -153,7 +153,7 @@ class VisitorImplCodeGen {
                 String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
                 // null comparison
-                String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, traverseCaller, "null",
+                String compare = UtilFunctionsIR.binaryInstruction("icmp eq", traverseCaller, "null",
                         expression.caller.type, false, false);
 
                 UtilFunctionsIR.conditionalBreakInstruction(compare, "static.void", labelIfEnd);
@@ -171,11 +171,11 @@ class VisitorImplCodeGen {
             }
             nearestMethod = temp;
 
-            // method is not present in the same class, so bitcast is needed
+            // method is not present in the same class, so "bitcast" is needed
             if (expression.caller.type.equals(nearestMethod) == false) {
                 System.out.println(" sending : static " + expression.caller.type);
                 traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type,
-                        nearestMethod, UtilFunctionsIR.BITCAST);
+                        nearestMethod, "bitcast");
             }
 
             StringBuilder br = new StringBuilder();
@@ -210,11 +210,11 @@ class VisitorImplCodeGen {
 
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
         String joinTypeResult;
-        if(InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type) == InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type))
-        {
+        if (InheritanceGraph.restrictedInheritanceType
+                .contains(expression.ifbody.type) == InheritanceGraph.restrictedInheritanceType
+                        .contains(expression.elsebody.type)) {
             joinTypeResult = expression.ifbody.type;
-        }
-        else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
+        } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
                 || InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type)) {
             joinTypeResult = Constants.ROOT_TYPE;
         } else {
@@ -229,7 +229,7 @@ class VisitorImplCodeGen {
 
         String compare = this.traverse(expression.predicate);
 
-        String convertIns = UtilFunctionsIR.convertInstruction(compare, "i8", "i1", UtilFunctionsIR.TRUNC);
+        String convertIns = UtilFunctionsIR.convertInstruction(compare, "i8", "i1", "trunc");
 
         UtilFunctionsIR.conditionalBreakInstruction(convertIns, labelIfThen, labelIfElse);
 
@@ -239,8 +239,7 @@ class VisitorImplCodeGen {
         String ifbody = this.traverse(expression.ifbody);
         if (expression.ifbody.type.equals(joinTypeResult) == false) {
             System.out.println(" sending : ifbody " + expression.ifbody.type);
-            ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult,
-                    UtilFunctionsIR.BITCAST);
+            ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult, "bitcast");
         }
         if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
             UtilFunctionsIR.storeInstruction(
@@ -259,7 +258,7 @@ class VisitorImplCodeGen {
         if (expression.elsebody.type.equals(joinTypeResult) == false) {
             System.out.println(" sending : elsebody " + expression.elsebody.type);
             elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult,
-                    UtilFunctionsIR.BITCAST);
+                    "bitcast");
         }
         if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
             UtilFunctionsIR.storeInstruction(
@@ -294,7 +293,7 @@ class VisitorImplCodeGen {
 
         String loopPredicate = this.traverse(expression.predicate);
 
-        String loopSwitcher = UtilFunctionsIR.convertInstruction(loopPredicate, "i8", "i1", UtilFunctionsIR.TRUNC);
+        String loopSwitcher = UtilFunctionsIR.convertInstruction(loopPredicate, "i8", "i1", "trunc");
 
         UtilFunctionsIR.conditionalBreakInstruction(loopSwitcher, loopBody, loopExit);
 
@@ -332,8 +331,7 @@ class VisitorImplCodeGen {
         String registerToStore = UtilFunctionsIR.mallocInstruction(sizeOfAllocation);
 
         // register in which the allocated bytes are type casted
-        String toReturn = UtilFunctionsIR.convertInstruction(registerToStore, "i8*", expression.typeid,
-                UtilFunctionsIR.BITCAST);
+        String toReturn = UtilFunctionsIR.convertInstruction(registerToStore, "i8*", expression.typeid, "bitcast");
 
         // calling the constructor
         UtilFunctionsIR.voidCallInstruction(
@@ -342,13 +340,12 @@ class VisitorImplCodeGen {
 
         // store the name here
         String objBitcast = toReturn;
-        if (Constants.ROOT_TYPE.equals(expression.typeid) == false)
-        {
+        if (Constants.ROOT_TYPE.equals(expression.typeid) == false) {
             System.out.println("sending : new " + expression.typeid);
             objBitcast = UtilFunctionsIR.convertInstruction(toReturn, expression.typeid, Constants.ROOT_TYPE,
-                    UtilFunctionsIR.BITCAST);
+                    "bitcast");
         }
-            
+
         return toReturn;
 
     }
@@ -362,9 +359,9 @@ class VisitorImplCodeGen {
         if (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
             return "0";
         }
-        String outBin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, toReturn, "null", expression.e1.type,
-                false, false);
-        return UtilFunctionsIR.convertInstruction(outBin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        String outBin = UtilFunctionsIR.binaryInstruction("icmp eq", toReturn, "null", expression.e1.type, false,
+                false);
+        return UtilFunctionsIR.convertInstruction(outBin, "i1", "i8", "zext");
     }
 
     // Visits 'expression + expression' expression
@@ -372,8 +369,7 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, first, second, expression.type, false,
-                true);
+        String toReturn = UtilFunctionsIR.binaryInstruction("add", first, second, expression.type, false, true);
         return toReturn;
     }
 
@@ -382,8 +378,7 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, first, second, expression.type, false,
-                true);
+        String toReturn = UtilFunctionsIR.binaryInstruction("sub", first, second, expression.type, false, true);
         return toReturn;
     }
 
@@ -392,8 +387,7 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.MUL, first, second, expression.type, false,
-                true);
+        String toReturn = UtilFunctionsIR.binaryInstruction("mul", first, second, expression.type, false, true);
         return toReturn;
     }
 
@@ -407,14 +401,12 @@ class VisitorImplCodeGen {
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
         // divide by 0 check
-        String compare = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.EQ, second, "0", Constants.INT_TYPE, false,
-                false);
+        String compare = UtilFunctionsIR.binaryInstruction("icmp eq", second, "0", Constants.INT_TYPE, false, false);
 
         UtilFunctionsIR.conditionalBreakInstruction(compare, "division.0", labelIfEnd);
 
         UtilFunctionsIR.LabelCreator(labelIfEnd);
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.DIV, first, second, expression.type, false,
-                false);
+        String toReturn = UtilFunctionsIR.binaryInstruction("sdiv", first, second, expression.type, false, false);
         return toReturn;
     }
 
@@ -422,8 +414,7 @@ class VisitorImplCodeGen {
     public String traverse(AST.comp expression) {
         String first = this.traverse(expression.e1);
 
-        String toReturn = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.XOR, first, "1", expression.e1.type, false,
-                false);
+        String toReturn = UtilFunctionsIR.binaryInstruction("xor", first, "1", expression.e1.type, false, false);
         return toReturn;
     }
 
@@ -432,9 +423,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
-                false, false);
-        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        String out_bin = UtilFunctionsIR.binaryInstruction("icmp slt", first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", "zext");
         return toReturn;
     }
 
@@ -443,9 +433,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
-                false, false);
-        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        String out_bin = UtilFunctionsIR.binaryInstruction("icmp sle", first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", "zext");
         return toReturn;
     }
 
@@ -453,9 +442,8 @@ class VisitorImplCodeGen {
         String first = this.traverse(expression.e1);
         String second = this.traverse(expression.e2);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SLT, first, second, expression.e1.type,
-                false, false);
-        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", UtilFunctionsIR.ZEXT);
+        String out_bin = UtilFunctionsIR.binaryInstruction("icmp eq", first, second, expression.e1.type, false, false);
+        String toReturn = UtilFunctionsIR.convertInstruction(out_bin, "i1", "i8", "zext");
         return toReturn;
     }
 
@@ -463,8 +451,7 @@ class VisitorImplCodeGen {
     public String traverse(AST.neg expression) {
         String first = this.traverse(expression.e1);
 
-        String out_bin = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.SUB, "0", first, expression.type, false,
-                true);
+        String out_bin = UtilFunctionsIR.binaryInstruction("sub", "0", first, expression.type, false, true);
         return out_bin;
     }
 
@@ -521,8 +508,8 @@ class VisitorImplCodeGen {
         // traversing for all AST class
         for (AST.class_ className : prog.classes) {
             GlobalVariables.inheritanceGraph.addNewClass(className);
-             System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
-             System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
+            System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
+            System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         }
         System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
         System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
@@ -599,61 +586,54 @@ class VisitorImplCodeGen {
 
         UtilFunctionsIR.CmainMethod();
 
-        
-
     }
 
-    private void DFSGenerateConstructors(GraphNode node)
-    {
+    private void DFSGenerateConstructors(GraphNode node) {
         ScopeTableHandler.scopeTable.enterScope();
 
         AST.class_ cl = node.getASTClass();
 
-        if(InheritanceGraph.restrictedInheritanceType.contains(cl.name) == true)
-        {
-            return ;
+        if (InheritanceGraph.restrictedInheritanceType.contains(cl.name) == true) {
+            return;
         }
 
-        //reinitializing some global variables 
+        // reinitializing some global variables
         GlobalVariables.GlobalRegisterCounter = 0;
         GlobalVariables.presentClass = cl.name;
         GlobalVariables.labelCounterMap.clear();
-        GlobalVariables.output.println("\n; Constructor of class '" +cl.name+"'" + "\ndefine void @" + UtilFunctionImpl.getMangledNameWithClassAndFunction(cl.name, cl.name)+ "(" + UtilFunctionImpl.getIRNameForClass(cl.name) + "* %this) {");
+        GlobalVariables.output.println("\n; Constructor of class '" + cl.name + "'" + "\ndefine void @"
+                + UtilFunctionImpl.getMangledNameWithClassAndFunction(cl.name, cl.name) + "("
+                + UtilFunctionImpl.getIRNameForClass(cl.name) + "* %this) {");
         UtilFunctionsIR.LabelCreator("entry");
 
         // creating for parent constructor i.e calling parent constructor
         String parentName = GlobalVariables.inheritanceGraph.inheritanceGraph
-        .get(GlobalVariables.inheritanceGraph.giveClassIndex(cl.name)).getASTClass().parent;
-        if(parentName != null)
-        {
+                .get(GlobalVariables.inheritanceGraph.giveClassIndex(cl.name)).getASTClass().parent;
+        if (parentName != null) {
             System.out.println("constructio : " + cl.name);
-            UtilFunctionsIR.constructorCall(parentName, UtilFunctionsIR.convertInstruction("%this", cl.name, parentName, UtilFunctionsIR.BITCAST));
+            UtilFunctionsIR.constructorCall(parentName,
+                    UtilFunctionsIR.convertInstruction("%this", cl.name, parentName, "bitcast"));
         }
 
         // now we visit for each attribute of AST.attr
-        for(AST.feature f : cl.features)
-        {
-            if(f instanceof AST.attr)
-            {
-                ScopeTableHandler.insertVar(((AST.attr)f).name, ((AST.attr)f).typeid);
+        for (AST.feature f : cl.features) {
+            if (f instanceof AST.attr) {
+                ScopeTableHandler.insertVar(((AST.attr) f).name, ((AST.attr) f).typeid);
             }
         }
 
-        for(AST.feature f : cl.features)
-        {
-            if(f instanceof AST.attr)
-            {
-                AST.attr a = (AST.attr)f;
+        for (AST.feature f : cl.features) {
+            if (f instanceof AST.attr) {
+                AST.attr a = (AST.attr) f;
 
                 this.traverse(a);
             }
         }
 
-        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "ret void" + "\n}");
-        
+        GlobalVariables.output.println("  " + "ret void" + "\n}");
+
         // traversing in a dfs fashion for children
-        for(GraphNode children : node.getChildren())
-        {
+        for (GraphNode children : node.getChildren()) {
             System.out.println(children.getASTClass().name + " : " + node.getASTClass().name);
             DFSGenerateConstructors(children);
         }
@@ -733,14 +713,14 @@ class VisitorImplCodeGen {
 
         // single pointer - gep
         if (InheritanceGraph.restrictedInheritanceType.contains(attribute.typeid) == true) {
-           
+
             if (value != null) {
                 // storing the default value, no assignment done here
                 UtilFunctionsIR.storeInstruction(value, classAttrGepReg,
                         UtilFunctionImpl.typeOfattr(attribute.typeid, false));
             } else {
                 // assignment being performed
-                String defValue = UtilFunctionsIR.UNDEF;
+                String defValue = "undef";
                 if (attribute.typeid.equals(Constants.INT_TYPE) || attribute.typeid.equals(Constants.BOOL_TYPE))
                     defValue = "0";
                 else if (attribute.typeid.equals(Constants.STRING_TYPE))
@@ -776,8 +756,7 @@ class VisitorImplCodeGen {
                         // iterate until presentClass is same as attribute.typeid
                         while (attribute.typeid.equals(presentClass) == false) {
                             System.out.println("attr: " + ancesstorClass);
-                            value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass,
-                                    UtilFunctionsIR.BITCAST);
+                            value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass, "bitcast");
 
                             ancesstorClass = presentClass;
                             // going towards parent
@@ -786,8 +765,7 @@ class VisitorImplCodeGen {
                                     .getASTClass().parent;
                         }
                         System.out.println("attr: " + ancesstorClass);
-                        value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid,
-                                UtilFunctionsIR.BITCAST);
+                        value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid, "bitcast");
                     }
 
                     UtilFunctionsIR.doublePointerStoreInstruction(value, classAttrGepReg, attribute.typeid);
@@ -838,18 +816,15 @@ class VisitorImplCodeGen {
 
         }
 
-        
         UtilFunctionsIR.breakInstruction(methodBody);
 
-
         UtilFunctionsIR.LabelCreator("static.void");
-        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_VOID_CALL, "");
+        UtilFunctionsIR.voidCallInstruction("print_dispatch_on_void_error", "");
         UtilFunctionsIR.breakInstruction(methodBody);
 
         UtilFunctionsIR.LabelCreator("division.0");
-        UtilFunctionsIR.voidCallInstruction(Constants.FUNCTION_DIVIDE_BY_ZERO,"");
+        UtilFunctionsIR.voidCallInstruction("print_div_by_zero_err_msg", "");
         UtilFunctionsIR.breakInstruction(methodBody);
-
 
         // bitcasting
         UtilFunctionsIR.LabelCreator(methodBody);
@@ -857,12 +832,10 @@ class VisitorImplCodeGen {
 
         if (method.typeid.equals(method.body.type) == false) {
             System.out.println("method body: " + method.body.type);
-            register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid,
-                    UtilFunctionsIR.BITCAST);
+            register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid, "bitcast");
         }
 
-        String returnInst = UtilFunctionsIR.INDENT + "ret " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " "
-                + register;
+        String returnInst = "  " + "ret " + UtilFunctionImpl.typeOfattr(method.typeid, true) + " " + register;
         GlobalVariables.output.println(returnInst);
         GlobalVariables.output.println("}");
 

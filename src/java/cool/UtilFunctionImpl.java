@@ -61,8 +61,7 @@ class UtilFunctionImpl {
         return mangledName;
     }
 
-    public static String getMangledNameWithClass(String name, List<AST.formal> formals,
-            String functionName) {
+    public static String getMangledNameWithClass(String name, List<AST.formal> formals, String functionName) {
         StringBuilder mangledName = new StringBuilder();
 
         // Adding class name to mangledName
@@ -71,7 +70,6 @@ class UtilFunctionImpl {
             mangledName.append(0);
         else
             mangledName.append(name.length()).append(name);
-        
 
         System.out.println(mangledName.toString());
         // Adding function name to mangledName
@@ -276,7 +274,7 @@ class UtilFunctionImpl {
         }
     }
 
-    // cond is true - return by adding '*' else without it 
+    // cond is true - return by adding '*' else without it
     public static String typeOfattr(String type, boolean cond) {
         if (Constants.STRING_TYPE.equals(type)) {
             return "i8*";
@@ -289,18 +287,18 @@ class UtilFunctionImpl {
         } else if ("i1".equals(type)) {
             return "i1";
         }
-        if(cond)
+        if (cond)
             return UtilFunctionImpl.getIRNameForClass(type) + "*";
         else
             return UtilFunctionImpl.getIRNameForClass(type);
     }
 
     public static String primitiveValue(String type) {
-        if(Constants.INT_TYPE.equals(type)) {
+        if (Constants.INT_TYPE.equals(type)) {
             return "0";
-        } else if(Constants.BOOL_TYPE.equals(type)) {
+        } else if (Constants.BOOL_TYPE.equals(type)) {
             return "0";
-        } else if(Constants.STRING_TYPE.equals(type)) {
+        } else if (Constants.STRING_TYPE.equals(type)) {
             return UtilFunctionsIR.stringGEP("");
         } else {
             return "undef";
@@ -338,20 +336,20 @@ class UtilFunctionImpl {
             GlobalVariables.GlobalStringCounter++;
         }
 
-        if (GlobalVariables.GlobalStringToIRMap.containsKey(Constants.ERROR_DIVIDE_BY_ZERO) == false) {
-            GlobalVariables.GlobalStringToIRMap.put(Constants.ERROR_DIVIDE_BY_ZERO,
+        if (GlobalVariables.GlobalStringToIRMap.containsKey("Exception Divide By Zero Found ") == false) {
+            GlobalVariables.GlobalStringToIRMap.put("Exception Divide By Zero Found ",
                     "@.str." + GlobalVariables.GlobalStringCounter);
             GlobalVariables.GlobalStringCounter++;
         }
 
-        if (GlobalVariables.GlobalStringToIRMap.containsKey(Constants.ERROR_VOID_CALL) == false) {
-            GlobalVariables.GlobalStringToIRMap.put(Constants.ERROR_VOID_CALL,
+        if (GlobalVariables.GlobalStringToIRMap.containsKey("VOID Dispatach Found ") == false) {
+            GlobalVariables.GlobalStringToIRMap.put("VOID Dispatach Found ",
                     "@.str." + GlobalVariables.GlobalStringCounter);
             GlobalVariables.GlobalStringCounter++;
         }
 
-        if (GlobalVariables.GlobalStringToIRMap.containsKey(Constants.ABORT_MSSG) == false) {
-            GlobalVariables.GlobalStringToIRMap.put(Constants.ABORT_MSSG,
+        if (GlobalVariables.GlobalStringToIRMap.containsKey("ABORT Message called from class ") == false) {
+            GlobalVariables.GlobalStringToIRMap.put("ABORT Message called from class ",
                     "@.str." + GlobalVariables.GlobalStringCounter);
             GlobalVariables.GlobalStringCounter++;
         }
@@ -433,8 +431,7 @@ class UtilFunctionImpl {
         GlobalVariables.IndexOfVariablesForClassMap.put(curr_class.name, currClassIndexMap);
         GlobalVariables.mapClassSize.put(curr_class.name, class_size);
 
-        for(GraphNode n : curr.getChildren())
-        {
+        for (GraphNode n : curr.getChildren()) {
             System.out.println("calling for : " + n.getASTClass().name + " by : " + curr.getASTClass().name);
             DFSprintClassToIR(n);
         }

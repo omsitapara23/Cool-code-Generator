@@ -1,8 +1,9 @@
 ; ModuleID = 'omisbest'
-
+source_filename = "omisbest"
 
 ; String constant declarations
 @.str.32 = private unnamed_addr constant [1 x i8] c"\00", align 1
+@.str.38 = private unnamed_addr constant [22 x i8] c"VOID Dispatach Found \00", align 1
 @.str.3 = private unnamed_addr constant [8 x i8] c"
 Sum : \00", align 1
 @.str.25 = private unnamed_addr constant [5 x i8] c"n = \00", align 1
@@ -30,7 +31,6 @@ Comparing these operands now
 \00", align 1
 @.str.20 = private unnamed_addr constant [58 x i8] c"Testing if-else by finding the smallest of three numbers
 \00", align 1
-@.str.38 = private unnamed_addr constant [32 x i8] c"VOID Dispatach Found at line - \00", align 1
 @.str.4 = private unnamed_addr constant [15 x i8] c"
 Difference : \00", align 1
 @.str.10 = private unnamed_addr constant [26 x i8] c"First is lesser or equal
@@ -72,6 +72,7 @@ Checking value returned by loop
 @.str.29 = private unnamed_addr constant [28 x i8] c"Value returned is not void
 \00", align 1
 @.str.9 = private unnamed_addr constant [13 x i8] c"Less than : \00", align 1
+@.str.37 = private unnamed_addr constant [32 x i8] c"Exception Divide By Zero Found \00", align 1
 @.str.23 = private unnamed_addr constant [13 x i8] c"
 Completed
 
@@ -80,7 +81,6 @@ Completed
 @.str.40 = private unnamed_addr constant [7 x i8] c"Object\00", align 1
 @.str.36 = private unnamed_addr constant [10 x i8] c"%1024[^
 ]\00", align 1
-@.str.37 = private unnamed_addr constant [42 x i8] c"Exception Divide By Zero Found at line - \00", align 1
 
 ; Class Declarations
 %class.Object = type {i8*}
@@ -257,7 +257,7 @@ entry:
 define void @print_dispatch_on_void_error() {
 entry:
   %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.35, i32 0, i32 0
-  %1 = getelementptr inbounds [32 x i8], [32 x i8]* @.str.38, i32 0, i32 0
+  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.38, i32 0, i32 0
  %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
   %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.26, i32 0, i32 0
  %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
@@ -268,7 +268,7 @@ entry:
 define void @print_div_by_zero_err_msg() {
 entry:
   %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.35, i32 0, i32 0
-  %1 = getelementptr inbounds [42 x i8], [42 x i8]* @.str.37, i32 0, i32 0
+  %1 = getelementptr inbounds [32 x i8], [32 x i8]* @.str.37, i32 0, i32 0
  %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
   %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.26, i32 0, i32 0
  %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
@@ -473,7 +473,7 @@ branch.normal.18:
   %104 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 1
   %105 = load i32, i32* %104, align 4
   %106 = load i32, i32* %x.addr, align 4
-  %107 = icmp slt i32 %105, %106
+  %107 = icmp eq i32 %105, %106
   %108 = zext i1 %107 to i8
   %109 = trunc i8 %108 to i1
   br i1 %109, label %cond.true.1, label %cond.false.1
@@ -506,7 +506,7 @@ branch.normal.19:
   %120 = alloca %class.IO, align 8
   %121 = load i32, i32* %x.addr, align 4
   %122 = load i32, i32* %y.addr, align 4
-  %123 = icmp slt i32 %121, %122
+  %123 = icmp sle i32 %121, %122
   %124 = zext i1 %123 to i8
   %125 = trunc i8 %124 to i1
   br i1 %125, label %cond.true.2, label %cond.false.2
@@ -539,7 +539,7 @@ branch.normal.22:
   %136 = alloca %class.IO, align 8
   %137 = load i32, i32* %x.addr, align 4
   %138 = load i32, i32* %y.addr, align 4
-  %139 = icmp slt i32 %137, %138
+  %139 = icmp eq i32 %137, %138
   %140 = zext i1 %139 to i8
   %141 = trunc i8 %140 to i1
   br i1 %141, label %cond.true.3, label %cond.false.3
@@ -724,7 +724,7 @@ branch.normal.42:
   %32 = alloca i32, align 8
   %33 = load i32, i32* %x.addr, align 4
   %34 = load i32, i32* %y.addr, align 4
-  %35 = icmp slt i32 %33, %34
+  %35 = icmp sle i32 %33, %34
   %36 = zext i1 %35 to i8
   %37 = trunc i8 %36 to i1
   br i1 %37, label %cond.true.6, label %cond.false.6
@@ -733,7 +733,7 @@ cond.true.6:
   %38 = alloca i32, align 8
   %39 = load i32, i32* %x.addr, align 4
   %40 = load i32, i32* %z.addr, align 4
-  %41 = icmp slt i32 %39, %40
+  %41 = icmp sle i32 %39, %40
   %42 = zext i1 %41 to i8
   %43 = trunc i8 %42 to i1
   br i1 %43, label %cond.true.7, label %cond.false.7
@@ -757,7 +757,7 @@ cond.false.6:
   %47 = alloca i32, align 8
   %48 = load i32, i32* %y.addr, align 4
   %49 = load i32, i32* %z.addr, align 4
-  %50 = icmp slt i32 %48, %49
+  %50 = icmp sle i32 %48, %49
   %51 = zext i1 %50 to i8
   %52 = trunc i8 %51 to i1
   br i1 %52, label %cond.true.8, label %cond.false.8
@@ -852,7 +852,7 @@ loop.cond:
   %17 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 1
   %18 = load i32, i32* %17, align 4
   %19 = load i32, i32* %x.addr, align 4
-  %20 = icmp slt i32 %18, %19
+  %20 = icmp sle i32 %18, %19
   %21 = zext i1 %20 to i8
   %22 = trunc i8 %21 to i1
   br i1 %22, label %loop.body, label %loop.exit
@@ -1003,7 +1003,7 @@ loop.cond.2:
   %25 = load i32, i32* %24, align 4
   %26 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 1
   %27 = load i32, i32* %26, align 4
-  %28 = icmp slt i32 %25, %27
+  %28 = icmp sle i32 %25, %27
   %29 = zext i1 %28 to i8
   %30 = trunc i8 %29 to i1
   br i1 %30, label %loop.body.2, label %loop.exit.2
