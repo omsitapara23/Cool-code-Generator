@@ -174,23 +174,19 @@ entry:
   %3 = bitcast i8* %2 to %class.C*
   call void @_CC1_FC1_(%class.C* %3)
   %4 = bitcast %class.C* %3 to %class.Object*
-  %5 = getelementptr inbounds %class.Object, %class.Object* %4, i32 0, i32 0
-  store i8* null, i8** %5, align 8
   store %class.C* %3, %class.C** %1, align 4
-  %6 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 2
-  %7 = call noalias i8* @malloc(i64 24)
-  %8 = bitcast i8* %7 to %class.C*
-  call void @_CC1_FC1_(%class.C* %8)
-  %9 = bitcast %class.C* %8 to %class.Object*
-  %10 = getelementptr inbounds %class.Object, %class.Object* %9, i32 0, i32 0
-  store i8* null, i8** %10, align 8
-  %11 = bitcast %class.C* %8 to %class.B*
-  store %class.B* %11, %class.B** %6, align 4
-  %12 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 3
-  store i32 0, i32* %12, align 4
-  %13 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 4
-  %14 = getelementptr inbounds [1 x i8], [1 x i8]* @.str.4, i32 0, i32 0
-  store i8* %14, i8** %13, align 8
+  %5 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 2
+  %6 = call noalias i8* @malloc(i64 24)
+  %7 = bitcast i8* %6 to %class.C*
+  call void @_CC1_FC1_(%class.C* %7)
+  %8 = bitcast %class.C* %7 to %class.Object*
+  %9 = bitcast %class.C* %7 to %class.B*
+  store %class.B* %9, %class.B** %5, align 4
+  %10 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 3
+  store i32 0, i32* %10, align 4
+  %11 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 4
+  %12 = getelementptr inbounds [1 x i8], [1 x i8]* @.str.4, i32 0, i32 0
+  store i8* %12, i8** %11, align 8
   ret void
 }
 

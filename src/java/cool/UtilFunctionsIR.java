@@ -138,7 +138,7 @@ class UtilFunctionsIR {
     // this function checks for the incoming parameter to be LLVM Primitive or not
     public static boolean ifLLVMPrimitiveType(String type) {
         boolean condition = false;
-        if (type.equals("i8") || type.equals("i8*") || type.equals("i1") || type.equals("i32") || type.equals("i64"))
+        if ("i8*".equals(type) || "i32".equals(type) || "i64".equals(type) || "i8".equals(type) || "i1".equals(type))
             condition = true;
         return condition;
     }
@@ -164,24 +164,6 @@ class UtilFunctionsIR {
 
         return regStore;
 
-    }
-
-    // this function creates phi node
-    public static String phiNode(String type, String n1, String type1, String n2, String type2) {
-
-        String regStore = "%" + GlobalVariables.GlobalRegisterCounter;
-        GlobalVariables.GlobalRegisterCounter++;
-
-        String newType = UtilFunctionImpl.typeOfattr(type, true);
-
-        StringBuilder br = new StringBuilder(INDENT);
-
-        br.append(regStore).append(" = phi ").append(newType).append(" [ ").append(n1).append(", %").append(type1)
-                .append(" ] , [ ").append(n2).append(", %").append(type2).append(" ]");
-
-        GlobalVariables.output.println(br.toString());
-
-        return regStore;
     }
 
     // this function creates call instruction
@@ -265,7 +247,7 @@ class UtilFunctionsIR {
 
     // this function creates type name get element pointer
     // register variable is previously bit casted to object
-    public static String typeNameGEP(String register) {
+    public static String currentPointerRegister(String register) {
         StringBuilder br = new StringBuilder(INDENT);
 
         String regStore = "%" + GlobalVariables.GlobalRegisterCounter;
@@ -372,7 +354,7 @@ class UtilFunctionsIR {
         String string_1 = UtilFunctionsIR.CallInstruction("i64", "strlen", "i8* %s1");
         String string_2 = UtilFunctionsIR.CallInstruction("i64", "strlen", "i8* %s2");
 
-        String concatResult = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, string_1, string_2, "i64", false,
+        String concatResult =   UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, string_1, string_2, "i64", false,
                 true);
         concatResult = UtilFunctionsIR.binaryInstruction(UtilFunctionsIR.ADD, concatResult, "1", "i64", false, true);
 
@@ -517,14 +499,14 @@ class UtilFunctionsIR {
         GlobalVariables.output.println("\n; Class: Object, Method: type_name" + "\ndefine i8* @" + UtilFunctionImpl.getMangledNameWithClassAndFunction(Constants.ROOT_TYPE, "type_name")+ "(" + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* %this) {");
         GlobalVariables.output.println("entry:");
 
-        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "ret i8* " + UtilFunctionsIR.loadInstruction(UtilFunctionsIR.typeNameGEP("%this"), "i8*") + "\n}");
+        GlobalVariables.output.println(UtilFunctionsIR.INDENT + "ret i8* " + UtilFunctionsIR.loadInstruction(UtilFunctionsIR.currentPointerRegister("%this"), "i8*") + "\n}");
 
         //abort method for object
         GlobalVariables.GlobalRegisterCounter = 0;
         GlobalVariables.output.println("\n; Class: Object, Method: abort" + "\ndefine " + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* @" + UtilFunctionImpl.getMangledNameWithClassAndFunction(Constants.ROOT_TYPE, "abort") + "(" + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* %this) {");
         GlobalVariables.output.println("entry:");
 
-        String loadInst = UtilFunctionsIR.loadInstruction(UtilFunctionsIR.typeNameGEP("%this"), "i8*");
+        String loadInst = UtilFunctionsIR.loadInstruction(UtilFunctionsIR.currentPointerRegister("%this"), "i8*");
         String params1 = UtilFunctionsIR.stringGEP("%s");
 
         String params2 = UtilFunctionsIR.stringGEP(Constants.ABORT_MSSG);
@@ -592,7 +574,6 @@ class UtilFunctionsIR {
         GlobalVariables.output.println(UtilFunctionsIR.INDENT + "ret i8* " + value + "\n}");
 
         stringOpMethods();
-        CmainMethod();
         voidDispatchError();
         divByZeroError();
 

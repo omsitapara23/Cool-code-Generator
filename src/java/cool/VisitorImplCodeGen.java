@@ -90,17 +90,11 @@ class VisitorImplCodeGen {
         String newType = returnString;
         String varToStoreType = ScopeTableHandler.scopeTable
                 .lookUpGlobal(ScopeTableHandler.getMangledNameVar(expression.name));
-
         if (expression.e1.type.equals(varToStoreType) == false) {
             if (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
                 AST.new_ newObject = new AST.new_(Constants.ROOT_TYPE, 0);
                 newObject.type = Constants.ROOT_TYPE;
                 newType = this.traverse(newObject);
-
-                String GepForType = UtilFunctionsIR.typeNameGEP(newType);
-                String GepString = UtilFunctionsIR.stringGEP(expression.e1.type);
-                UtilFunctionsIR.storeInstruction(GepString, GepForType, "i8*");
-
             }
 
             else {
@@ -355,11 +349,6 @@ class VisitorImplCodeGen {
                     UtilFunctionsIR.BITCAST);
         }
             
-
-        // uncomment this three lines if this code not work
-        String typenameGEP = UtilFunctionsIR.typeNameGEP(objBitcast);
-        String typenameString = UtilFunctionsIR.stringGEP(expression.typeid);
-        UtilFunctionsIR.storeInstruction(typenameString, typenameGEP, "i8*");
         return toReturn;
 
     }
@@ -597,23 +586,20 @@ class VisitorImplCodeGen {
         GlobalVariables.IndexOfVariablesForClassMap.put(Constants.ROOT_TYPE, new HashMap<>());
 
         for (GraphNode curr : root.getChildren()) {
-            // System.out.println("calling for : " + curr.getASTClass().name + " by : " +
-            // root.getASTClass().name);
-
             UtilFunctionImpl.DFSprintClassToIR(curr);
         }
         GlobalVariables.output.println();
-
-        // System.out.println( "fucking : " +
-        // ((AST.method)prog.classes.get(0).features.get(3)).body);
-        // System.out.println( "fucking : " +
-        // ((AST.method)GlobalVariables.inheritanceGraph.getRootNode().getChildren().get(0).getChildren().get(0).getASTClass().features.get(3)).body);
-        DFSVisitor(GlobalVariables.inheritanceGraph.getRootNode());
 
         // generateConstructors
         DFSGenerateConstructors(GlobalVariables.inheritanceGraph.getRootNode());
         // generate DEFAULt methodss
         UtilFunctionsIR.generateDefaultMethods();
+
+        DFSVisitor(GlobalVariables.inheritanceGraph.getRootNode());
+
+        UtilFunctionsIR.CmainMethod();
+
+        
 
     }
 
@@ -649,7 +635,7 @@ class VisitorImplCodeGen {
         {
             if(f instanceof AST.attr)
             {
-                ScopeTableHandler.scopeTable.insert(((AST.attr)f).name, ((AST.attr)f).typeid);
+                ScopeTableHandler.insertVar(((AST.attr)f).name, ((AST.attr)f).typeid);
             }
         }
 
@@ -681,8 +667,6 @@ class VisitorImplCodeGen {
 
         if (!(InheritanceGraph.restrictedType.contains(node.getASTClass().name)
                 || node.getASTClass().name == Constants.ROOT_TYPE)) {
-            // System.out.println("fuckling dfs " +
-            // ((AST.method)node.getASTClass().features.get(3)).body);
             this.traverse(node.getASTClass());
         }
 
@@ -782,12 +766,6 @@ class VisitorImplCodeGen {
                         objCreated.type = Constants.ROOT_TYPE;
 
                         value = this.traverse(objCreated);
-
-                        String gepName = UtilFunctionsIR.typeNameGEP(value);
-
-                        String gepString = UtilFunctionsIR.stringGEP(attribute.value.type);
-
-                        UtilFunctionsIR.storeInstruction(gepString, gepName, "i8*");
                     } else {
                         String presentClass = GlobalVariables.inheritanceGraph.inheritanceGraph
                                 .get(GlobalVariables.inheritanceGraph.giveClassIndex(attribute.value.type))
@@ -830,7 +808,6 @@ class VisitorImplCodeGen {
     public void traverse(AST.method method) {
         // a new scope, as local variables in a function hides the scope of the
         // member variables of the class
-        // System.out.println("fuckling " + method.body);
         ScopeTableHandler.scopeTable.enterScope();
 
         GlobalVariables.GlobalRegisterCounter = 0;
@@ -875,7 +852,6 @@ class VisitorImplCodeGen {
 
 
         // bitcasting
-        // System.out.println(method.body);
         UtilFunctionsIR.LabelCreator(methodBody);
         String register = this.traverse(method.body);
 
@@ -895,7 +871,7 @@ class VisitorImplCodeGen {
 
     // Visits the formals of the method
     public void traverse(AST.formal f) {
-        ScopeTableHandler.scopeTable.insert(f.name, f.typeid);
+        ScopeTableHandler.insertVar(f.name, f.typeid);
         GlobalVariables.formalList.add(f.name);
         GlobalVariables.output.print(UtilFunctionImpl.typeOfattr(f.typeid, true) + " %" + f.name);
     }
