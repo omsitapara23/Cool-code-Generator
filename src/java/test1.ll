@@ -3,6 +3,7 @@ source_filename = "omisbest"
 
 ; String constant declarations
 @.str.32 = private unnamed_addr constant [1 x i8] c"\00", align 1
+@.str.40 = private unnamed_addr constant [26 x i8] c"Typename Function called \00", align 1
 @.str.38 = private unnamed_addr constant [22 x i8] c"VOID Dispatach Found \00", align 1
 @.str.3 = private unnamed_addr constant [8 x i8] c"
 Sum : \00", align 1
@@ -11,7 +12,7 @@ Sum : \00", align 1
 \00", align 1
 @.str.34 = private unnamed_addr constant [4 x i8] c"%d
 \00", align 1
-@.str.42 = private unnamed_addr constant [7 x i8] c"String\00", align 1
+@.str.43 = private unnamed_addr constant [7 x i8] c"String\00", align 1
 @.str.6 = private unnamed_addr constant [13 x i8] c"
 Quotient : \00", align 1
 @.str.15 = private unnamed_addr constant [20 x i8] c"Bool value is true
@@ -23,10 +24,10 @@ Quotient : \00", align 1
 @.str.8 = private unnamed_addr constant [31 x i8] c"
 Comparing these operands now
 \00", align 1
-@.str.43 = private unnamed_addr constant [4 x i8] c"Int\00", align 1
+@.str.44 = private unnamed_addr constant [4 x i8] c"Int\00", align 1
 @.str.13 = private unnamed_addr constant [16 x i8] c"Both are equal
 \00", align 1
-@.str.44 = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
+@.str.45 = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
 @.str.14 = private unnamed_addr constant [20 x i8] c"Both are not equal
 \00", align 1
 @.str.20 = private unnamed_addr constant [58 x i8] c"Testing if-else by finding the smallest of three numbers
@@ -61,7 +62,7 @@ Product : \00", align 1
 \00", align 1
 @.str.12 = private unnamed_addr constant [18 x i8] c"First is greater
 \00", align 1
-@.str.41 = private unnamed_addr constant [3 x i8] c"IO\00", align 1
+@.str.42 = private unnamed_addr constant [3 x i8] c"IO\00", align 1
 @.str.7 = private unnamed_addr constant [22 x i8] c"
 Negation of first : \00", align 1
 @.str.31 = private unnamed_addr constant [2 x i8] c"*\00", align 1
@@ -73,30 +74,30 @@ Checking value returned by loop
 \00", align 1
 @.str.9 = private unnamed_addr constant [13 x i8] c"Less than : \00", align 1
 @.str.37 = private unnamed_addr constant [32 x i8] c"Exception Divide By Zero Found \00", align 1
+@.str.39 = private unnamed_addr constant [22 x i8] c"ABORT Message called \00", align 1
 @.str.23 = private unnamed_addr constant [13 x i8] c"
 Completed
 
 \00", align 1
-@.str.39 = private unnamed_addr constant [33 x i8] c"ABORT Message called from class \00", align 1
-@.str.40 = private unnamed_addr constant [7 x i8] c"Object\00", align 1
+@.str.41 = private unnamed_addr constant [7 x i8] c"Object\00", align 1
 @.str.36 = private unnamed_addr constant [10 x i8] c"%1024[^
 ]\00", align 1
 
 ; Class Declarations
-%class.Object = type {i8*}
+%class.Object = type {}
 %class.IO = type { %class.Object }
 %class.SimpleExprTests = type { %class.IO, i32, i8, %class.Object*, i32, %class.Object* }
 %class.Main = type { %class.Object, %class.SimpleExprTests* }
 
 
-; Constructor of class 'Object'
+; class : 'Object function : constructor
 define void @_CObject6_FObject6_(%class.Object* %this) {
 
 entry:
   ret void
 }
 
-; Constructor of class 'IO'
+; class : 'IO function : constructor
 define void @_CIO2_FIO2_(%class.IO* %this) {
 
 entry:
@@ -105,7 +106,7 @@ entry:
   ret void
 }
 
-; Constructor of class 'SimpleExprTests'
+; class : 'SimpleExprTests function : constructor
 define void @_CSimpleExprTests15_FSimpleExprTests15_(%class.SimpleExprTests* %this) {
 
 entry:
@@ -124,7 +125,7 @@ entry:
   ret void
 }
 
-; Constructor of class 'Main'
+; class : 'Main function : constructor
 define void @_CMain4_FMain4_(%class.Main* %this) {
 
 entry:
@@ -139,53 +140,47 @@ entry:
   ret void
 }
 
-; C malloc declaration
+; malloc for C
 declare noalias i8* @malloc(i64)
 
-; C printf declaration
+; printf for C
 declare i32 @printf(i8*, ...)
 
-; C scanf declaration
+; scanf for C
 declare i32 @scanf(i8*, ...)
 
-; C strlen declaration
+; strlen for C
 declare i64 @strlen(i8*)
 
-; C strcat declaration
+; strcat for C
 declare i8* @strcat(i8*, i8*)
 
-; C strcpy declaration
+; strcpy for C
 declare i8* @strcpy(i8*, i8*)
 
-; C strncpy declaration
+; strncpy for C
 declare i8* @strncpy(i8*, i8*, i64)
 
-; C exit declaration
+; exit for C
 declare void @exit(i32)
 
 ; Class: Object, Method: type_name
 define i8* @_CObject6_Ftype_name9_(%class.Object* %this) {
 entry:
-  %0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0
-  %1 = load i8*, i8** %0, align 8
-  ret i8* %1
+  %0 = getelementptr inbounds [26 x i8], [26 x i8]* @.str.40, i32 0, i32 0
+  ret i8* %0
 }
 
 ; Class: Object, Method: abort
 define %class.Object* @_CObject6_Fabort5_(%class.Object* %this) {
 entry:
-  %0 = getelementptr inbounds %class.Object, %class.Object* %this, i32 0, i32 0
-  %1 = load i8*, i8** %0, align 8
-  %2 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.35, i32 0, i32 0
-  %3 = getelementptr inbounds [33 x i8], [33 x i8]* @.str.39, i32 0, i32 0
-  %4 = call i32 (i8*, ...) @printf(i8* %2, i8* %3)
-  %5 = call i32 (i8*, ...) @printf(i8* %2, i8* %1)
-  %6 = call i32 (i8*, ...) @printf(i8* %2, i8* %3)
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.35, i32 0, i32 0
+  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.39, i32 0, i32 0
+  %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
+  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.26, i32 0, i32 0
+  %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
   call void @exit(i32 0)
-  %7 = call noalias i8* @malloc(i64 0)
-  %8 = bitcast i8* %7 to %class.Object*
-  call void @_CObject6_FObject6_(%class.Object* %8)
-  ret %class.Object* %8
+  ret %class.Object* %this
 }
 
 ; Class: IO, Method: out_int
@@ -276,9 +271,9 @@ entry:
  ret void
 }
 
-; Class: SimpleExprTests, Method: binOpTest
-define i32 @_CSimpleExprTests15_FbinOpTest9_(%class.SimpleExprTests* %this, i32 %x, i32 %y) {
-
+; Class: 'SimpleExprTests' Function : 'binOpTest'
+define i32 @_CSimpleExprTests15_FbinOpTest9_(%class.SimpleExprTests* %this, i32 %x, i32 %y
+) {
 entry:
   %x.addr = alloca i32, align 8
   store i32 %x, i32* %x.addr, align 4
@@ -644,9 +639,9 @@ branch.normal.34:
   ret i32 0
 }
 
-; Class: SimpleExprTests, Method: ifElseTest
-define i32 @_CSimpleExprTests15_FifElseTest10_(%class.SimpleExprTests* %this, i32 %x, i32 %y, i32 %z) {
-
+; Class: 'SimpleExprTests' Function : 'ifElseTest'
+define i32 @_CSimpleExprTests15_FifElseTest10_(%class.SimpleExprTests* %this, i32 %x, i32 %y, i32 %z
+) {
 entry:
   %x.addr = alloca i32, align 8
   store i32 %x, i32* %x.addr, align 4
@@ -799,9 +794,9 @@ branch.normal.47:
   ret i32 0
 }
 
-; Class: SimpleExprTests, Method: loopTest1
-define i32 @_CSimpleExprTests15_FloopTest19_(%class.SimpleExprTests* %this, i32 %x) {
-
+; Class: 'SimpleExprTests' Function : 'loopTest1'
+define i32 @_CSimpleExprTests15_FloopTest19_(%class.SimpleExprTests* %this, i32 %x
+) {
 entry:
   %x.addr = alloca i32, align 8
   store i32 %x, i32* %x.addr, align 4
@@ -935,9 +930,9 @@ branch.normal.58:
   ret i32 0
 }
 
-; Class: SimpleExprTests, Method: loopTest2
-define i32 @_CSimpleExprTests15_FloopTest29_(%class.SimpleExprTests* %this, i32 %x) {
-
+; Class: 'SimpleExprTests' Function : 'loopTest2'
+define i32 @_CSimpleExprTests15_FloopTest29_(%class.SimpleExprTests* %this, i32 %x
+) {
 entry:
   %x.addr = alloca i32, align 8
   store i32 %x, i32* %x.addr, align 4
@@ -1049,9 +1044,9 @@ branch.normal.65:
   ret i32 0
 }
 
-; Class: Main, Method: main
-define i32 @_CMain4_Fmain4_(%class.Main* %this) {
-
+; Class: 'Main' Function : 'main'
+define i32 @_CMain4_Fmain4_(%class.Main* %this
+) {
 entry:
   br label %method.body
 
@@ -1113,6 +1108,5 @@ define i32 @main() {
 entry:
  %main = alloca %class.Main, align 8
  call void @_CMain4_FMain4_(%class.Main* %main)
- %retval = call i32 @_CMain4_Fmain4_(%class.Main* %main)
- ret i32 %retval
-}
+ %dummyretval = call i32 @_CMain4_Fmain4_(%class.Main* %main)
+ ret i32 0}

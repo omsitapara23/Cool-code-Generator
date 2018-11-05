@@ -71,7 +71,7 @@ class UtilFunctionsIR {
     }
 
     // this function creates binary Instruction
-    public static String binaryInstruction(String opr, String fst, String snd, String type, boolean n1, boolean n2) {
+    public static String binaryInstruction(String opr, String fst, String snd, String type, boolean n2) {
         String regStore = "%" + GlobalVariables.GlobalRegisterCounter;
         GlobalVariables.GlobalRegisterCounter++;
 
@@ -80,9 +80,6 @@ class UtilFunctionsIR {
         StringBuilder br = new StringBuilder("  ");
         br.append(regStore).append(" = ").append(opr).append(" ");
 
-        if (n1) {
-            br.append("nuw ");
-        }
         if (n2) {
             br.append("nsw ");
         }
@@ -140,20 +137,20 @@ class UtilFunctionsIR {
                 .append(" to ").append(toTypeFromExpr);
 
         GlobalVariables.output.println(br.toString());
-
         return regStore;
 
     }
 
     // this function creates call instruction
     public static String CallInstruction(String type, String CalleeName, String params) {
-        String regStore = "%" + GlobalVariables.GlobalRegisterCounter;
-        GlobalVariables.GlobalRegisterCounter++;
-
-        String newType = UtilFunctionImpl.typeOfattr(type, true);
 
         StringBuilder br = new StringBuilder("  ");
+        String regStore = "%" + GlobalVariables.GlobalRegisterCounter;
+        
 
+        String newType = UtilFunctionImpl.typeOfattr(type, true);
+        GlobalVariables.GlobalRegisterCounter++;
+    
         br.append(regStore).append(" = call ").append(newType).append(" @").append(CalleeName).append("(")
                 .append(params).append(")");
 
@@ -194,8 +191,9 @@ class UtilFunctionsIR {
 
             StringBuilder br = new StringBuilder("  ");
 
-            br.append(regStore).append(" = getelementptr inbounds [").append(s.length() + 1).append(" x i8], [")
-                    .append(s.length() + 1).append(" x i8]* ").append(GlobalVariables.GlobalStringToIRMap.get(s))
+            br.append(regStore).append(" = getelementptr inbounds [").append(s.length() + 1).append(" x i8], [");
+
+            br.append(s.length() + 1).append(" x i8]* ").append(GlobalVariables.GlobalStringToIRMap.get(s))
                     .append(", i32 0, i32 0");
 
             GlobalVariables.output.println(br.toString());
@@ -333,8 +331,8 @@ class UtilFunctionsIR {
         String string_1 = UtilFunctionsIR.CallInstruction("i64", "strlen", "i8* %s1");
         String string_2 = UtilFunctionsIR.CallInstruction("i64", "strlen", "i8* %s2");
 
-        String concatResult = UtilFunctionsIR.binaryInstruction("add", string_1, string_2, "i64", false, true);
-        concatResult = UtilFunctionsIR.binaryInstruction("add", concatResult, "1", "i64", false, true);
+        String concatResult = UtilFunctionsIR.binaryInstruction("add", string_1, string_2, "i64", true);
+        concatResult = UtilFunctionsIR.binaryInstruction("add", concatResult, "1", "i64", true);
 
         String finalString = UtilFunctionsIR.mallocInstruction(concatResult);
         UtilFunctionsIR.CallInstruction(Constants.STRING_TYPE, "strcpy", "i8* " + finalString + ", i8* %s1");
@@ -379,14 +377,9 @@ class UtilFunctionsIR {
         StringBuilder cmethod = new StringBuilder();
         cmethod.append("\ndefine i32 @main() {\nentry:\n %main = alloca %class.Main, align 8\n call void @"
                 + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "Main") + "(%class.Main* %main)\n");
-        if (GlobalVariables.mainRet.equals(Constants.INT_TYPE)) {
-            cmethod.append(" %retval = call i32 @" + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "main")
-                    + "(%class.Main* %main)\n").append(" ret i32 %retval\n");
-        } else {
-            cmethod.append(" %dummyretval = call " + UtilFunctionImpl.typeOfattr(GlobalVariables.mainRet, true) + " @"
-                    + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "main") + "(%class.Main* %main)\n")
-                    .append(" ret i32 0");
-        }
+        cmethod.append(" %dummyretval = call " + UtilFunctionImpl.typeOfattr(GlobalVariables.mainRet, true) + " @"
+                + UtilFunctionImpl.getMangledNameWithClassAndFunction("Main", "main") + "(%class.Main* %main)\n")
+                .append(" ret i32 0");
         cmethod.append("}\n");
         GlobalVariables.output.print(cmethod.toString());
     }
@@ -438,47 +431,45 @@ class UtilFunctionsIR {
     public static void generateDefaultMethods() {
         // generating IR for standard declarations present in C
         // malloc
-        GlobalVariables.output.println("\n; C malloc declaration");
+        GlobalVariables.output.println("\n; malloc for C");
         GlobalVariables.output.println("declare noalias i8* @malloc(i64)");
 
         // printf used for out_int , out_string
-        GlobalVariables.output.println("\n; C printf declaration");
+        GlobalVariables.output.println("\n; printf for C");
         GlobalVariables.output.println("declare i32 @printf(i8*, ...)");
 
         // scanf used for in_int , in_string
-        GlobalVariables.output.println("\n; C scanf declaration");
+        GlobalVariables.output.println("\n; scanf for C");
         GlobalVariables.output.println("declare i32 @scanf(i8*, ...)");
 
         // strlen used for length
-        GlobalVariables.output.println("\n; C strlen declaration");
+        GlobalVariables.output.println("\n; strlen for C");
         GlobalVariables.output.println("declare i64 @strlen(i8*)");
 
         // strcat used for string concat
-        GlobalVariables.output.println("\n; C strcat declaration");
+        GlobalVariables.output.println("\n; strcat for C");
         GlobalVariables.output.println("declare i8* @strcat(i8*, i8*)");
 
         // strcpy used for string copy
-        GlobalVariables.output.println("\n; C strcpy declaration");
+        GlobalVariables.output.println("\n; strcpy for C");
         GlobalVariables.output.println("declare i8* @strcpy(i8*, i8*)");
 
         // strncpy
-        GlobalVariables.output.println("\n; C strncpy declaration");
+        GlobalVariables.output.println("\n; strncpy for C");
         GlobalVariables.output.println("declare i8* @strncpy(i8*, i8*, i64)");
 
         // exit used for abort
-        GlobalVariables.output.println("\n; C exit declaration");
+        GlobalVariables.output.println("\n; exit for C");
         GlobalVariables.output.println("declare void @exit(i32)");
 
         // generating IR for defalut object methods
-        // type_name method for object
         GlobalVariables.GlobalRegisterCounter = 0;
         GlobalVariables.output.println("\n; Class: Object, Method: type_name" + "\ndefine i8* @"
                 + UtilFunctionImpl.getMangledNameWithClassAndFunction(Constants.ROOT_TYPE, "type_name") + "("
                 + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* %this) {");
         GlobalVariables.output.println("entry:");
-
         GlobalVariables.output.println("  " + "ret i8* "
-                + UtilFunctionsIR.loadInstruction(UtilFunctionsIR.currentPointerRegister("%this"), "i8*") + "\n}");
+                + UtilFunctionsIR.stringGEP("Typename Function called ") + "\n}");
 
         // abort method for object
         GlobalVariables.GlobalRegisterCounter = 0;
@@ -488,18 +479,15 @@ class UtilFunctionsIR {
                 + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* %this) {");
         GlobalVariables.output.println("entry:");
 
-        String loadInst = UtilFunctionsIR.loadInstruction(UtilFunctionsIR.currentPointerRegister("%this"), "i8*");
         String params1 = UtilFunctionsIR.stringGEP("%s");
 
-        String params2 = UtilFunctionsIR.stringGEP("ABORT Message called from class ");
+        String params2 = UtilFunctionsIR.stringGEP("ABORT Message called ");
 
         GlobalVariables.output.println("  " + "%" + GlobalVariables.GlobalRegisterCounter
                 + " = call i32 (i8*, ...) @printf(i8* " + params1 + ", i8* " + params2 + ")");
         GlobalVariables.GlobalRegisterCounter++;
 
-        GlobalVariables.output.println("  " + "%" + GlobalVariables.GlobalRegisterCounter
-                + " = call i32 (i8*, ...) @printf(i8* " + params1 + ", i8* " + loadInst + ")");
-        GlobalVariables.GlobalRegisterCounter++;
+        params2 = UtilFunctionsIR.stringGEP("\n");
 
         GlobalVariables.output.println("  " + "%" + GlobalVariables.GlobalRegisterCounter
                 + " = call i32 (i8*, ...) @printf(i8* " + params1 + ", i8* " + params2 + ")");
@@ -508,19 +496,13 @@ class UtilFunctionsIR {
         // exit
         GlobalVariables.output.println("  " + "call void @exit(i32 0)");
 
-        // return dummy object
-        String mallocInst = UtilFunctionsIR
-                .mallocInstruction("" + GlobalVariables.mapClassSize.get(Constants.ROOT_TYPE));
-        String value = UtilFunctionsIR.convertInstruction(mallocInst, "i8*", Constants.ROOT_TYPE, "bitcast");
-        UtilFunctionsIR.voidCallInstruction(
-                UtilFunctionImpl.getMangledNameWithClassAndFunction(Constants.ROOT_TYPE, Constants.ROOT_TYPE),
-                UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* " + value);
-
         GlobalVariables.output.println(
-                "  " + "ret " + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* " + value + "\n}");
+                "  " + "ret " + UtilFunctionImpl.getIRNameForClass(Constants.ROOT_TYPE) + "* %this\n}");
 
         // generating IO methods
         // out_int method of class IO
+        String mallocInst;
+        String value;
         GlobalVariables.GlobalRegisterCounter = 0;
         GlobalVariables.output.println(
                 "\n; Class: IO, Method: out_int" + "\ndefine " + UtilFunctionImpl.getIRNameForClass(Constants.IO_TYPE)

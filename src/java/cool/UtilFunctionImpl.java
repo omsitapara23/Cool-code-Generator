@@ -348,8 +348,14 @@ class UtilFunctionImpl {
             GlobalVariables.GlobalStringCounter++;
         }
 
-        if (GlobalVariables.GlobalStringToIRMap.containsKey("ABORT Message called from class ") == false) {
-            GlobalVariables.GlobalStringToIRMap.put("ABORT Message called from class ",
+        if (GlobalVariables.GlobalStringToIRMap.containsKey("ABORT Message called ") == false) {
+            GlobalVariables.GlobalStringToIRMap.put("ABORT Message called ",
+                    "@.str." + GlobalVariables.GlobalStringCounter);
+            GlobalVariables.GlobalStringCounter++;
+        }
+
+        if (GlobalVariables.GlobalStringToIRMap.containsKey("Typename Function called ") == false) {
+            GlobalVariables.GlobalStringToIRMap.put("Typename Function called ",
                     "@.str." + GlobalVariables.GlobalStringCounter);
             GlobalVariables.GlobalStringCounter++;
         }
@@ -389,22 +395,25 @@ class UtilFunctionImpl {
     }
 
     public static void DFSprintClassToIR(GraphNode curr) {
+
+        if (InheritanceGraph.restrictedInheritanceType.contains(curr.getASTClass().name))
+            return;
+        
         AST.class_ curr_class = curr.getASTClass();
         // The initial size
         int class_size = 8;
 
-        if (InheritanceGraph.restrictedInheritanceType.contains(curr_class.name))
-            return;
-        StringBuilder printStr = new StringBuilder(UtilFunctionImpl.getIRNameForClass(curr_class.name));
         class_size += GlobalVariables.mapClassSize.get(curr.getParent().getASTClass().name);
-        printStr.append(" = type { ").append(UtilFunctionImpl.getIRNameForClass(curr.getParent().getASTClass().name));
 
-        Map<String, String> currClassIndexMap = new HashMap<>();
+        StringBuilder printStr = new StringBuilder(UtilFunctionImpl.getIRNameForClass(curr_class.name)).append(" = type { ").append(UtilFunctionImpl.getIRNameForClass(curr.getParent().getASTClass().name));
 
         Map<String, String> currClassParentIndexMap = GlobalVariables.IndexOfVariablesForClassMap
                 .get(curr.getParent().getASTClass().name);
 
-        for (Map.Entry<String, String> entry : currClassParentIndexMap.entrySet()) {
+        Map<String, String> currClassIndexMap = new HashMap<>();
+
+        for (Map.Entry<String, String> entry : currClassParentIndexMap.entrySet())
+        {
             currClassIndexMap.put(entry.getKey(), " i32 0," + entry.getValue());
         }
 
@@ -412,16 +421,15 @@ class UtilFunctionImpl {
         int curr_index = 0;
         for (AST.feature curr_f : curr_class.features) {
             if (curr_f instanceof AST.attr) {
-                curr_index++;
                 AST.attr curr_attr = (AST.attr) curr_f;
-                class_size += UtilFunctionImpl.SizeForClass(curr_attr.typeid);
                 printStr.append(", ").append(UtilFunctionImpl.typeOfattr(curr_attr.typeid, true));
+                class_size += UtilFunctionImpl.SizeForClass(curr_attr.typeid);
+                curr_index++;
                 currClassIndexMap.put(curr_attr.name, " i32 0, i32 " + curr_index);
 
             } else {
-                AST.method curr_method = (AST.method) curr_f;
                 GlobalVariables.mangledFunctionNames
-                        .add(UtilFunctionImpl.getMangledNameWithClassAndFunction(curr_class.name, curr_method.name));
+                        .add(UtilFunctionImpl.getMangledNameWithClassAndFunction(curr_class.name, ((AST.method)curr_f).name));
             }
 
         }

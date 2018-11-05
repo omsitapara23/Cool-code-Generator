@@ -281,14 +281,21 @@ public class InheritanceGraph
             }
         }
     }
-    public void connectGraphCodegen() {
-        for(GraphNode cl: inheritanceGraph) {
-            if(cl.getASTClass().parent!=null) {
-                // node has a parent
-                // System.out.println(cl.getAstClass().parent);
-                int parentIndex = classNameToIndex.get(cl.getASTClass().parent);
-                cl.setParent(inheritanceGraph.get(parentIndex));
-                inheritanceGraph.get(parentIndex).addChild(cl);
+    public void connectGraphCodegen()
+    {
+        for(GraphNode node: inheritanceGraph)
+        {
+            if(node.getASTClass().parent == null)
+            {
+                //Parent not found
+            }     
+            else
+            {
+                //setting parent links
+                node.setParent(inheritanceGraph.get(classNameToIndex.get(node.getASTClass().parent)));
+
+                // setting child links
+                inheritanceGraph.get(classNameToIndex.get(node.getASTClass().parent)).addChild(node);
             }
         }
     }
