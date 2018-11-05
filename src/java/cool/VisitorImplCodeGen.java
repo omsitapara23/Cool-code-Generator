@@ -150,15 +150,15 @@ class VisitorImplCodeGen {
             if (InheritanceGraph.restrictedInheritanceType.contains(expression.caller.type) == false) {
                 // generating labels for different branches that we are going to construct.
 
-                String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
+                String normalBranch = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
                 // null comparison
                 String compare = UtilFunctionsIR.binaryInstruction("icmp eq", traverseCaller, "null",
                         expression.caller.type, false);
 
-                UtilFunctionsIR.conditionalBreakInstruction(compare, "static.void", labelIfEnd);
+                UtilFunctionsIR.conditionalBreakInstruction(compare, "static.void", normalBranch);
 
-                UtilFunctionsIR.LabelCreator(labelIfEnd);
+                UtilFunctionsIR.LabelCreator(normalBranch);
             }
 
             // looking up for the nearest class which contains this method to be invoked
@@ -210,9 +210,7 @@ class VisitorImplCodeGen {
 
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
         String joinTypeResult;
-        if (InheritanceGraph.restrictedInheritanceType
-                .contains(expression.ifbody.type) == InheritanceGraph.restrictedInheritanceType
-                        .contains(expression.elsebody.type)) {
+        if (expression.ifbody.type == expression.elsebody.type) {
             joinTypeResult = expression.ifbody.type;
         } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
                 || InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type)) {
