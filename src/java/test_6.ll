@@ -21,8 +21,8 @@
 ; Class Declarations
 %class.Object = type {}
 %class.IO = type { %class.Object }
-%class.Main = type { %class.IO, %class.Fib* }
-%class.Fib = type { %class.Object, i32 }
+%class.Main = type { %class.IO, %class.A* }
+%class.A = type { %class.Object }
 
 
 ; class : 'Object function : constructor
@@ -48,18 +48,16 @@ entry:
   %0 = bitcast %class.Main* %this to %class.IO*
   call void @_CIO2_FIO2_(%class.IO* %0)
   %1 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  store %class.Fib* null, %class.Fib** %1, align 4
+  store %class.A* null, %class.A** %1, align 4
   ret void
 }
 
-; class : 'Fib function : constructor
-define void @_CFib3_FFib3_(%class.Fib* %this) {
+; class : 'A function : constructor
+define void @_CA1_FA1_(%class.A* %this) {
 
 entry:
-  %0 = bitcast %class.Fib* %this to %class.Object*
+  %0 = bitcast %class.A* %this to %class.Object*
   call void @_CObject6_FObject6_(%class.Object* %0)
-  %1 = getelementptr inbounds %class.Fib, %class.Fib* %this,  i32 0, i32 1
-  store i32 10, i32* %1, align 4
   ret void
 }
 
@@ -209,114 +207,34 @@ division.0:
   br label %method.body
 
 method.body:
-  %0 = icmp eq %class.Main* %this, null
-  br i1 %0, label %static.void, label %branch.normal
+  %0 = call noalias i8* @malloc(i64 8)
+  %1 = bitcast i8* %0 to %class.A*
+  call void @_CA1_FA1_(%class.A* %1)
+  %2 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
+  store %class.A* %1, %class.A** %2, align 8
+  %3 = icmp eq %class.Main* %this, null
+  br i1 %3, label %static.void, label %branch.normal
 
 branch.normal:
-  %1 = bitcast %class.Main* %this to %class.IO*
-  %2 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  %3 = load %class.Fib*, %class.Fib** %2, align 8
-  %4 = icmp eq %class.Fib* %3, null
-  br i1 %4, label %static.void, label %branch.normal.1
+  %4 = bitcast %class.Main* %this to %class.IO*
+  %5 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
+  %6 = load %class.A*, %class.A** %5, align 8
+  %7 = icmp eq %class.A* %6, null
+  br i1 %7, label %static.void, label %branch.normal.1
 
 branch.normal.1:
-  %5 = call i32 @_CFib3_Ffff3_(%class.Fib* %3)
-  %6 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %1, i32 %5)
-  ret i32 99
-}
-
-; Class: 'Fib' Function : 'fff'
-define i32 @_CFib3_Ffff3_(%class.Fib* %this
-) {
-entry:
-  br label %method.body
-
-static.void:
-  call void @print_dispatch_on_void_error()
-  br label %method.body
-
-division.0:
-  call void @print_div_by_zero_err_msg()
-  br label %method.body
-
-method.body:
-  %0 = icmp eq %class.Fib* %this, null
-  br i1 %0, label %static.void, label %branch.normal.2
+  %8 = bitcast %class.A* %6 to %class.Object*
+  %9 = call i8* @_CObject6_Ftype_name9_(%class.Object* %8)
+  %10 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.0, i32 0, i32 0
+  %11 = call i8* @_CString6_Fconcat6_(i8* %9, i8* %10)
+  %12 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %4, i8* %11)
+  %13 = icmp eq %class.Main* %this, null
+  br i1 %13, label %static.void, label %branch.normal.2
 
 branch.normal.2:
-  %1 = getelementptr inbounds %class.Fib, %class.Fib* %this,  i32 0, i32 1
-  %2 = load i32, i32* %1, align 4
-  %3 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %2)
-  ret i32 %3
-}
-
-; Class: 'Fib' Function : 'fib'
-define i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %i
-) {
-entry:
-  %i.addr = alloca i32, align 8
-  store i32 %i, i32* %i.addr, align 4
-  br label %method.body
-
-static.void:
-  call void @print_dispatch_on_void_error()
-  br label %method.body
-
-division.0:
-  call void @print_div_by_zero_err_msg()
-  br label %method.body
-
-method.body:
-  %0 = alloca i32, align 8
-  %1 = load i32, i32* %i.addr, align 4
-  %2 = icmp eq i32 %1, 0
-  %3 = zext i1 %2 to i8
-  %4 = trunc i8 %3 to i1
-  br i1 %4, label %cond.true, label %cond.false
-
-cond.true:
-  store i32 0, i32* %0, align 4
-  br label %branch.normal.3
-
-cond.false:
-  %5 = alloca i32, align 8
-  %6 = load i32, i32* %i.addr, align 4
-  %7 = icmp eq i32 %6, 1
-  %8 = zext i1 %7 to i8
-  %9 = trunc i8 %8 to i1
-  br i1 %9, label %cond.true.1, label %cond.false.1
-
-cond.true.1:
-  store i32 1, i32* %5, align 4
-  br label %branch.normal.4
-
-cond.false.1:
-  %10 = icmp eq %class.Fib* %this, null
-  br i1 %10, label %static.void, label %branch.normal.5
-
-branch.normal.5:
-  %11 = load i32, i32* %i.addr, align 4
-  %12 = sub nsw i32 %11, 1
-  %13 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %12)
-  %14 = icmp eq %class.Fib* %this, null
-  br i1 %14, label %static.void, label %branch.normal.6
-
-branch.normal.6:
-  %15 = load i32, i32* %i.addr, align 4
-  %16 = sub nsw i32 %15, 2
-  %17 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %16)
-  %18 = add nsw i32 %13, %17
-  store i32 %18, i32* %5, align 4
-  br label %branch.normal.4
-
-branch.normal.4:
-  %19 = load i32, i32* %5, align 4
-  store i32 %19, i32* %0, align 4
-  br label %branch.normal.3
-
-branch.normal.3:
-  %20 = load i32, i32* %0, align 4
-  ret i32 %20
+  %14 = bitcast %class.Main* %this to %class.Object*
+  %15 = call %class.Object* @_CObject6_Fabort5_(%class.Object* %14)
+  ret i32 0
 }
 
 define i32 @main() {

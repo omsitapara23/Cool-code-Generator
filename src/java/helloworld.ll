@@ -1,27 +1,31 @@
 ; String constant declarations
-@.str.1 = private unnamed_addr constant [1 x i8] c"\00", align 1
-@.str.9 = private unnamed_addr constant [26 x i8] c"Typename Function called \00", align 1
-@.str.7 = private unnamed_addr constant [22 x i8] c"VOID Dispatach Found \00", align 1
-@.str.11 = private unnamed_addr constant [3 x i8] c"IO\00", align 1
-@.str.0 = private unnamed_addr constant [2 x i8] c"
+@.str.3 = private unnamed_addr constant [1 x i8] c"\00", align 1
+@.str.11 = private unnamed_addr constant [26 x i8] c"Typename Function called \00", align 1
+@.str.9 = private unnamed_addr constant [22 x i8] c"VOID Dispatach Found \00", align 1
+@.str.13 = private unnamed_addr constant [3 x i8] c"IO\00", align 1
+@.str.2 = private unnamed_addr constant [2 x i8] c"
 \00", align 1
-@.str.3 = private unnamed_addr constant [4 x i8] c"%d
+@.str.5 = private unnamed_addr constant [4 x i8] c"%d
 \00", align 1
-@.str.12 = private unnamed_addr constant [7 x i8] c"String\00", align 1
-@.str.4 = private unnamed_addr constant [3 x i8] c"%s\00", align 1
-@.str.13 = private unnamed_addr constant [4 x i8] c"Int\00", align 1
-@.str.6 = private unnamed_addr constant [32 x i8] c"Exception Divide By Zero Found \00", align 1
-@.str.14 = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
-@.str.8 = private unnamed_addr constant [22 x i8] c"ABORT Message called \00", align 1
-@.str.10 = private unnamed_addr constant [7 x i8] c"Object\00", align 1
-@.str.5 = private unnamed_addr constant [10 x i8] c"%1024[^
+@.str.14 = private unnamed_addr constant [7 x i8] c"String\00", align 1
+@.str.0 = private unnamed_addr constant [14 x i8] c"Hello world!
+\00", align 1
+@.str.6 = private unnamed_addr constant [3 x i8] c"%s\00", align 1
+@.str.15 = private unnamed_addr constant [4 x i8] c"Int\00", align 1
+@.str.8 = private unnamed_addr constant [32 x i8] c"Exception Divide By Zero Found \00", align 1
+@.str.1 = private unnamed_addr constant [21 x i8] c"Cool is really cool
+\00", align 1
+@.str.16 = private unnamed_addr constant [5 x i8] c"Bool\00", align 1
+@.str.10 = private unnamed_addr constant [22 x i8] c"ABORT Message called \00", align 1
+@.str.12 = private unnamed_addr constant [7 x i8] c"Object\00", align 1
+@.str.7 = private unnamed_addr constant [10 x i8] c"%1024[^
 ]\00", align 1
-@.str.2 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
+@.str.4 = private unnamed_addr constant [3 x i8] c"%d\00", align 1
 
 ; Class Declarations
 %class.Object = type {}
 %class.IO = type { %class.Object }
-%class.Main = type { %class.Object, i32, i32 }
+%class.Main = type { %class.IO }
 
 
 ; class : 'Object function : constructor
@@ -44,12 +48,8 @@ entry:
 define void @_CMain4_FMain4_(%class.Main* %this) {
 
 entry:
-  %0 = bitcast %class.Main* %this to %class.Object*
-  call void @_CObject6_FObject6_(%class.Object* %0)
-  %1 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  store i32 0, i32* %1, align 4
-  %2 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 2
-  store i32 0, i32* %2, align 4
+  %0 = bitcast %class.Main* %this to %class.IO*
+  call void @_CIO2_FIO2_(%class.IO* %0)
   ret void
 }
 
@@ -80,17 +80,17 @@ declare void @exit(i32)
 ; Class: Object, Method: type_name
 define i8* @_CObject6_Ftype_name9_(%class.Object* %this) {
 entry:
-  %0 = getelementptr inbounds [26 x i8], [26 x i8]* @.str.9, i32 0, i32 0
+  %0 = getelementptr inbounds [26 x i8], [26 x i8]* @.str.11, i32 0, i32 0
   ret i8* %0
 }
 
 ; Class: Object, Method: abort
 define %class.Object* @_CObject6_Fabort5_(%class.Object* %this) {
 entry:
-  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
-  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.8, i32 0, i32 0
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.6, i32 0, i32 0
+  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.10, i32 0, i32 0
   %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
-  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.0, i32 0, i32 0
+  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.2, i32 0, i32 0
   %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
   call void @exit(i32 0)
   ret %class.Object* %this
@@ -99,7 +99,7 @@ entry:
 ; Class: IO, Method: out_int
 define %class.IO* @_CIO2_Fout_int7_(%class.IO* %this, i32 %d) {
 entry:
-  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.2, i32 0, i32 0
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
   %call = call i32 (i8*, ...) @printf(i8* %0, i32 %d)
   %1 = call noalias i8* @malloc(i64 8)
   %2 = bitcast i8* %1 to %class.IO*
@@ -111,7 +111,7 @@ entry:
 define i32 @_CIO2_Fin_int6_(%class.IO* %this) {
 entry:
   %0 = alloca i32, align 8
-  %1 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.2, i32 0, i32 0
+  %1 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
   %call = call i32 (i8*, ...) @scanf(i8* %1, i32* %0)
   %2 = load i32, i32* %0, align 4
   ret i32 %2
@@ -120,7 +120,7 @@ entry:
 ; Class: IO, Method: out_string
 define %class.IO* @_CIO2_Fout_string10_(%class.IO* %this, i8* %s) {
 entry:
-  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.6, i32 0, i32 0
   %call = call i32 (i8*, ...) @printf(i8* %0, i8* %s)
   %1 = call noalias i8* @malloc(i64 8)
   %2 = bitcast i8* %1 to %class.IO*
@@ -133,7 +133,7 @@ define i8* @_CIO2_Fin_string9_(%class.IO* %this) {
 entry:
   %0 = alloca i8*, align 8
   %1 = load i8*, i8** %0, align 8
-  %2 = getelementptr inbounds [10 x i8], [10 x i8]* @.str.5, i32 0, i32 0
+  %2 = getelementptr inbounds [10 x i8], [10 x i8]* @.str.7, i32 0, i32 0
   %call = call i32 (i8*, ...) @scanf(i8* %2, i8* %1)
   %3 = load i8*, i8** %0, align 8
   ret i8* %3
@@ -164,10 +164,10 @@ entry:
 
 define void @print_dispatch_on_void_error() {
 entry:
-  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
-  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.7, i32 0, i32 0
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.6, i32 0, i32 0
+  %1 = getelementptr inbounds [22 x i8], [22 x i8]* @.str.9, i32 0, i32 0
  %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
-  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.0, i32 0, i32 0
+  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.2, i32 0, i32 0
  %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
   call void @exit(i32 1)
  ret void
@@ -175,10 +175,10 @@ entry:
 
 define void @print_div_by_zero_err_msg() {
 entry:
-  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
-  %1 = getelementptr inbounds [32 x i8], [32 x i8]* @.str.6, i32 0, i32 0
+  %0 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.6, i32 0, i32 0
+  %1 = getelementptr inbounds [32 x i8], [32 x i8]* @.str.8, i32 0, i32 0
  %2 = call i32 (i8*, ...) @printf(i8* %0, i8* %1)
-  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.0, i32 0, i32 0
+  %3 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.2, i32 0, i32 0
  %4 = call i32 (i8*, ...) @printf(i8* %0, i8* %3)
   call void @exit(i32 1)
  ret void
@@ -199,21 +199,20 @@ division.0:
   br label %method.body
 
 method.body:
-  %0 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  %1 = load i32, i32* %0, align 4
-  %2 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 2
-  %3 = load i32, i32* %2, align 4
-  %4 = add nsw i32 %1, %3
-  %5 = getelementptr inbounds [3 x i8], [3 x i8]* @.str.4, i32 0, i32 0
-  %6 = getelementptr inbounds [2 x i8], [2 x i8]* @.str.0, i32 0, i32 0
-  %7 = getelementptr inbounds [4 x i8], [4 x i8]* @.str.13, i32 0, i32 0
-  %8 = call i32 (i8*, ...) @printf(i8* %5, i8* null)
-  %9 = call i32 (i8*, ...) @printf(i8* %5, i8* %7)
-  %10 = call i32 (i8*, ...) @printf(i8* %5, i8* %6)
-  call void @exit(i32 0)
-  %11 = call noalias i8* @malloc(i64 0)
-  %12 = bitcast i8* %11 to %class.Object*
-  call void @_CObject6_FObject6_(%class.Object* %12)
+  %0 = icmp eq %class.Main* %this, null
+  br i1 %0, label %static.void, label %branch.normal
+
+branch.normal:
+  %1 = bitcast %class.Main* %this to %class.IO*
+  %2 = getelementptr inbounds [14 x i8], [14 x i8]* @.str.0, i32 0, i32 0
+  %3 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %1, i8* %2)
+  %4 = icmp eq %class.Main* %this, null
+  br i1 %4, label %static.void, label %branch.normal.1
+
+branch.normal.1:
+  %5 = bitcast %class.Main* %this to %class.IO*
+  %6 = getelementptr inbounds [21 x i8], [21 x i8]* @.str.1, i32 0, i32 0
+  %7 = call %class.IO* @_CIO2_Fout_string10_(%class.IO* %5, i8* %6)
   ret i32 0
 }
 

@@ -1,6 +1,3 @@
-; ModuleID = 'omisbest'
-source_filename = "omisbest"
-
 ; String constant declarations
 @.str.32 = private unnamed_addr constant [1 x i8] c"\00", align 1
 @.str.40 = private unnamed_addr constant [26 x i8] c"Typename Function called \00", align 1

@@ -21,8 +21,10 @@
 ; Class Declarations
 %class.Object = type {}
 %class.IO = type { %class.Object }
-%class.Main = type { %class.IO, %class.Fib* }
-%class.Fib = type { %class.Object, i32 }
+%class.A = type { %class.Object, i32 }
+%class.B = type { %class.A, i32 }
+%class.C = type { %class.Object, %class.B* }
+%class.Main = type { %class.Object, %class.C* }
 
 
 ; class : 'Object function : constructor
@@ -41,25 +43,50 @@ entry:
   ret void
 }
 
+; class : 'A function : constructor
+define void @_CA1_FA1_(%class.A* %this) {
+
+entry:
+  %0 = bitcast %class.A* %this to %class.Object*
+  call void @_CObject6_FObject6_(%class.Object* %0)
+  %1 = getelementptr inbounds %class.A, %class.A* %this,  i32 0, i32 1
+  store i32 0, i32* %1, align 4
+  ret void
+}
+
+; class : 'B function : constructor
+define void @_CB1_FB1_(%class.B* %this) {
+
+entry:
+  %0 = bitcast %class.B* %this to %class.A*
+  call void @_CA1_FA1_(%class.A* %0)
+  %1 = getelementptr inbounds %class.B, %class.B* %this,  i32 0, i32 1
+  store i32 0, i32* %1, align 4
+  ret void
+}
+
+; class : 'C function : constructor
+define void @_CC1_FC1_(%class.C* %this) {
+
+entry:
+  %0 = bitcast %class.C* %this to %class.Object*
+  call void @_CObject6_FObject6_(%class.Object* %0)
+  %1 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 1
+  store %class.B* null, %class.B** %1, align 4
+  ret void
+}
+
 ; class : 'Main function : constructor
 define void @_CMain4_FMain4_(%class.Main* %this) {
 
 entry:
-  %0 = bitcast %class.Main* %this to %class.IO*
-  call void @_CIO2_FIO2_(%class.IO* %0)
-  %1 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  store %class.Fib* null, %class.Fib** %1, align 4
-  ret void
-}
-
-; class : 'Fib function : constructor
-define void @_CFib3_FFib3_(%class.Fib* %this) {
-
-entry:
-  %0 = bitcast %class.Fib* %this to %class.Object*
+  %0 = bitcast %class.Main* %this to %class.Object*
   call void @_CObject6_FObject6_(%class.Object* %0)
-  %1 = getelementptr inbounds %class.Fib, %class.Fib* %this,  i32 0, i32 1
-  store i32 10, i32* %1, align 4
+  %1 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
+  %2 = call noalias i8* @malloc(i64 16)
+  %3 = bitcast i8* %2 to %class.C*
+  call void @_CC1_FC1_(%class.C* %3)
+  store %class.C* %3, %class.C** %1, align 4
   ret void
 }
 
@@ -194,6 +221,67 @@ entry:
  ret void
 }
 
+; Class: 'A' Function : 'foo'
+define i32 @_CA1_Ffoo3_(%class.A* %this
+) {
+entry:
+  br label %method.body
+
+static.void:
+  call void @print_dispatch_on_void_error()
+  br label %method.body
+
+division.0:
+  call void @print_div_by_zero_err_msg()
+  br label %method.body
+
+method.body:
+  ret i32 0
+}
+
+; Class: 'B' Function : 'foo'
+define i32 @_CB1_Ffoo3_(%class.B* %this
+) {
+entry:
+  br label %method.body
+
+static.void:
+  call void @print_dispatch_on_void_error()
+  br label %method.body
+
+division.0:
+  call void @print_div_by_zero_err_msg()
+  br label %method.body
+
+method.body:
+  ret i32 1
+}
+
+; Class: 'C' Function : 'staticDispatchOnVoidEror'
+define i32 @_CC1_FstaticDispatchOnVoidEror24_(%class.C* %this
+) {
+entry:
+  br label %method.body
+
+static.void:
+  call void @print_dispatch_on_void_error()
+  br label %method.body
+
+division.0:
+  call void @print_div_by_zero_err_msg()
+  br label %method.body
+
+method.body:
+  %0 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 1
+  %1 = load %class.B*, %class.B** %0, align 8
+  %2 = icmp eq %class.B* %1, null
+  br i1 %2, label %static.void, label %branch.normal
+
+branch.normal:
+  %3 = call i32 @_CB1_Ffoo3_(%class.B* %1)
+  ret i32 %3
+}
+
 ; Class: 'Main' Function : 'main'
 define i32 @_CMain4_Fmain4_(%class.Main* %this
 ) {
@@ -209,114 +297,14 @@ division.0:
   br label %method.body
 
 method.body:
-  %0 = icmp eq %class.Main* %this, null
-  br i1 %0, label %static.void, label %branch.normal
-
-branch.normal:
-  %1 = bitcast %class.Main* %this to %class.IO*
-  %2 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  %3 = load %class.Fib*, %class.Fib** %2, align 8
-  %4 = icmp eq %class.Fib* %3, null
-  br i1 %4, label %static.void, label %branch.normal.1
+  %0 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
+  %1 = load %class.C*, %class.C** %0, align 8
+  %2 = icmp eq %class.C* %1, null
+  br i1 %2, label %static.void, label %branch.normal.1
 
 branch.normal.1:
-  %5 = call i32 @_CFib3_Ffff3_(%class.Fib* %3)
-  %6 = call %class.IO* @_CIO2_Fout_int7_(%class.IO* %1, i32 %5)
-  ret i32 99
-}
-
-; Class: 'Fib' Function : 'fff'
-define i32 @_CFib3_Ffff3_(%class.Fib* %this
-) {
-entry:
-  br label %method.body
-
-static.void:
-  call void @print_dispatch_on_void_error()
-  br label %method.body
-
-division.0:
-  call void @print_div_by_zero_err_msg()
-  br label %method.body
-
-method.body:
-  %0 = icmp eq %class.Fib* %this, null
-  br i1 %0, label %static.void, label %branch.normal.2
-
-branch.normal.2:
-  %1 = getelementptr inbounds %class.Fib, %class.Fib* %this,  i32 0, i32 1
-  %2 = load i32, i32* %1, align 4
-  %3 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %2)
-  ret i32 %3
-}
-
-; Class: 'Fib' Function : 'fib'
-define i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %i
-) {
-entry:
-  %i.addr = alloca i32, align 8
-  store i32 %i, i32* %i.addr, align 4
-  br label %method.body
-
-static.void:
-  call void @print_dispatch_on_void_error()
-  br label %method.body
-
-division.0:
-  call void @print_div_by_zero_err_msg()
-  br label %method.body
-
-method.body:
-  %0 = alloca i32, align 8
-  %1 = load i32, i32* %i.addr, align 4
-  %2 = icmp eq i32 %1, 0
-  %3 = zext i1 %2 to i8
-  %4 = trunc i8 %3 to i1
-  br i1 %4, label %cond.true, label %cond.false
-
-cond.true:
-  store i32 0, i32* %0, align 4
-  br label %branch.normal.3
-
-cond.false:
-  %5 = alloca i32, align 8
-  %6 = load i32, i32* %i.addr, align 4
-  %7 = icmp eq i32 %6, 1
-  %8 = zext i1 %7 to i8
-  %9 = trunc i8 %8 to i1
-  br i1 %9, label %cond.true.1, label %cond.false.1
-
-cond.true.1:
-  store i32 1, i32* %5, align 4
-  br label %branch.normal.4
-
-cond.false.1:
-  %10 = icmp eq %class.Fib* %this, null
-  br i1 %10, label %static.void, label %branch.normal.5
-
-branch.normal.5:
-  %11 = load i32, i32* %i.addr, align 4
-  %12 = sub nsw i32 %11, 1
-  %13 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %12)
-  %14 = icmp eq %class.Fib* %this, null
-  br i1 %14, label %static.void, label %branch.normal.6
-
-branch.normal.6:
-  %15 = load i32, i32* %i.addr, align 4
-  %16 = sub nsw i32 %15, 2
-  %17 = call i32 @_CFib3_Ffib3_(%class.Fib* %this, i32 %16)
-  %18 = add nsw i32 %13, %17
-  store i32 %18, i32* %5, align 4
-  br label %branch.normal.4
-
-branch.normal.4:
-  %19 = load i32, i32* %5, align 4
-  store i32 %19, i32* %0, align 4
-  br label %branch.normal.3
-
-branch.normal.3:
-  %20 = load i32, i32* %0, align 4
-  ret i32 %20
+  %3 = call i32 @_CC1_FstaticDispatchOnVoidEror24_(%class.C* %1)
+  ret i32 0
 }
 
 define i32 @main() {

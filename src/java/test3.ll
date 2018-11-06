@@ -1,6 +1,3 @@
-; ModuleID = 'omisbest'
-source_filename = "omisbest"
-
 ; String constant declarations
 @.str.27 = private unnamed_addr constant [1 x i8] c"\00", align 1
 @.str.17 = private unnamed_addr constant [13 x i8] c"
