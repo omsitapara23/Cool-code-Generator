@@ -304,19 +304,7 @@ class VisitorImplCodeGen {
 
     }
 
-    // Visits '{ [expression{}]+ }' expression
-    public String traverse(AST.block expression) {
 
-        String toReturn = null;
-
-        for (AST.expression curr_expr : expression.l1)
-        {
-
-            toReturn = this.traverse(curr_expr);
-        }
-
-        return toReturn;
-    }
 
     // Visits 'new TYPE' expression
     public String traverse(AST.new_ expression) {
@@ -354,6 +342,20 @@ class VisitorImplCodeGen {
         String outBin = UtilFunctionsIR.binaryInstruction("icmp eq", toReturn, "null", expression.e1.type, 
                 false);
         return UtilFunctionsIR.convertInstruction(outBin, "i1", "i8", "zext");
+    }
+
+    // Visits '{ [expression{}]+ }' expression
+    public String traverse(AST.block expression) {
+
+        String toReturn = null;
+
+        for (AST.expression curr_expr : expression.l1)
+        {
+
+            toReturn = this.traverse(curr_expr);
+        }
+
+        return toReturn;
     }
 
     // Visits 'expression + expression' expression
@@ -447,6 +449,22 @@ class VisitorImplCodeGen {
         return out_bin;
     }
 
+
+    // Visits boolean expression
+    public String traverse(AST.bool_const expression)
+    {
+        if (!expression.value)
+            return "0";
+        else
+            return "1";
+    }
+
+
+    // Visits string expression
+    public String traverse(AST.string_const expression) {
+        return UtilFunctionsIR.stringGEP(expression.value);
+    }
+
     // Visits 'ID' expression
     public String traverse(AST.object expression) {
         if ("self".equals(expression.name) == false) {
@@ -474,19 +492,8 @@ class VisitorImplCodeGen {
         return String.valueOf(expression.value);
     }
 
-    // Visits string expression
-    public String traverse(AST.string_const expression) {
-        return UtilFunctionsIR.stringGEP(expression.value);
-    }
 
-    // Visits boolean expression
-    public String traverse(AST.bool_const expression)
-    {
-        if (!expression.value)
-            return "0";
-        else
-            return "1";
-    }
+    
 
     public void traverse(AST.program prog) {
 

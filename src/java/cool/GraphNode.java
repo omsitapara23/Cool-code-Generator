@@ -12,6 +12,16 @@ public class GraphNode
     private List<GraphNode> childrenList;
     private boolean initiated;
 
+    private void initialize(AST.class_ astClass, int index)
+    {
+        if(initiated)
+            return;
+        this.astClass = astClass;
+        this.index = index;
+        this.childrenList = new ArrayList<>();
+        this.parent = null;
+        this.initiated = true;
+    }
 
     //static initializer
     static
@@ -25,20 +35,9 @@ public class GraphNode
         initialize(astClass, index);
     }
 
-    private void initialize(AST.class_ astClass, int index)
+    public void setParent(GraphNode parent)
     {
-        if(initiated)
-            return;
-        this.astClass = astClass;
-        this.index = index;
-        this.childrenList = new ArrayList<>();
-        this.parent = null;
-        this.initiated = true;
-    }
-
-    public void addChild(GraphNode newChild)
-    {
-        childrenList.add(newChild);
+        this.parent = parent;
     }
 
     public boolean hasParent()
@@ -49,9 +48,10 @@ public class GraphNode
             return false; 
     }
 
-    public GraphNode getParent()
+
+    public void addChild(GraphNode newChild)
     {
-        return parent;
+        childrenList.add(newChild);
     }
 
     public AST.class_ getASTClass()
@@ -69,10 +69,13 @@ public class GraphNode
         return childrenList;
     }
 
-    public void setParent(GraphNode parent)
+
+    public GraphNode getParent()
     {
-        this.parent = parent;
+        return parent;
     }
+
+    
 
     public boolean equalTo(GraphNode newNode)
     {
