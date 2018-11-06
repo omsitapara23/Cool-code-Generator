@@ -129,16 +129,15 @@ entry:
   %3 = call noalias i8* @malloc(i64 8)
   %4 = bitcast i8* %3 to %class.IO*
   call void @_CIO2_FIO2_(%class.IO* %4)
-  %5 = bitcast %class.IO* %4 to %class.Object*
   store %class.IO* %4, %class.IO** %2, align 4
-  %6 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 3
-  %7 = call noalias i8* @malloc(i64 0)
-  %8 = bitcast i8* %7 to %class.Object*
-  call void @_CObject6_FObject6_(%class.Object* %8)
-  store %class.Object* %8, %class.Object** %6, align 4
-  %9 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 4
-  %10 = getelementptr inbounds [6 x i8], [6 x i8]* @.str.0, i32 0, i32 0
-  store i8* %10, i8** %9, align 8
+  %5 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 3
+  %6 = call noalias i8* @malloc(i64 0)
+  %7 = bitcast i8* %6 to %class.Object*
+  call void @_CObject6_FObject6_(%class.Object* %7)
+  store %class.Object* %7, %class.Object** %5, align 4
+  %8 = getelementptr inbounds %class.C, %class.C* %this,  i32 0, i32 4
+  %9 = getelementptr inbounds [6 x i8], [6 x i8]* @.str.0, i32 0, i32 0
+  store i8* %9, i8** %8, align 8
   ret void
 }
 
@@ -152,7 +151,6 @@ entry:
   %2 = call noalias i8* @malloc(i64 60)
   %3 = bitcast i8* %2 to %class.C*
   call void @_CC1_FC1_(%class.C* %3)
-  %4 = bitcast %class.C* %3 to %class.Object*
   store %class.C* %3, %class.C** %1, align 4
   ret void
 }

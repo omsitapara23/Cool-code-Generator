@@ -88,8 +88,7 @@ class VisitorImplCodeGen {
         String returnString = this.traverse(expression.e1);
         String varToStore;
         String newType = returnString;
-        String varToStoreType = ScopeTableHandler.scopeTable
-                .lookUpGlobal(ScopeTableHandler.getMangledNameVar(expression.name));
+        String varToStoreType = (expression.type);
         if (expression.e1.type.equals(varToStoreType) == false) {
             if (InheritanceGraph.restrictedInheritanceType.contains(expression.e1.type)) {
                 AST.new_ newObject = new AST.new_(Constants.ROOT_TYPE, 0);
@@ -98,7 +97,6 @@ class VisitorImplCodeGen {
             }
 
             else {
-                System.out.println("sending : assign " + expression.e1.type);
                 newType = UtilFunctionsIR.convertInstruction(returnString, expression.e1.type, varToStoreType,
                         "bitcast");
             }
@@ -173,7 +171,6 @@ class VisitorImplCodeGen {
 
             // method is not present in the same class, so "bitcast" is needed
             if (expression.caller.type.equals(nearestMethod) == false) {
-                System.out.println(" sending : static " + expression.caller.type);
                 traverseCaller = UtilFunctionsIR.convertInstruction(traverseCaller, expression.caller.type,
                         nearestMethod, "bitcast");
             }
@@ -210,7 +207,7 @@ class VisitorImplCodeGen {
 
         String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
         String joinTypeResult;
-        if (expression.ifbody.type == expression.elsebody.type) {
+        if (expression.ifbody.type.equals(expression.elsebody.type)) {
             joinTypeResult = expression.ifbody.type;
         } else if (InheritanceGraph.restrictedInheritanceType.contains(expression.ifbody.type)
                 || InheritanceGraph.restrictedInheritanceType.contains(expression.elsebody.type)) {
@@ -236,7 +233,6 @@ class VisitorImplCodeGen {
         UtilFunctionsIR.LabelCreator(labelIfThen);
         String ifbody = this.traverse(expression.ifbody);
         if (expression.ifbody.type.equals(joinTypeResult) == false) {
-            System.out.println(" sending : ifbody " + expression.ifbody.type);
             ifbody = UtilFunctionsIR.convertInstruction(ifbody, expression.ifbody.type, joinTypeResult, "bitcast");
         }
         if (!InheritanceGraph.restrictedInheritanceType.contains(joinTypeResult)) {
@@ -254,7 +250,6 @@ class VisitorImplCodeGen {
         UtilFunctionsIR.LabelCreator(labelIfElse);
         String elsebody = this.traverse(expression.elsebody);
         if (expression.elsebody.type.equals(joinTypeResult) == false) {
-            System.out.println(" sending : elsebody " + expression.elsebody.type);
             elsebody = UtilFunctionsIR.convertInstruction(elsebody, expression.elsebody.type, joinTypeResult,
                     "bitcast");
         }
@@ -343,13 +338,6 @@ class VisitorImplCodeGen {
                 UtilFunctionImpl.getMangledNameWithClassAndFunction(expression.typeid, expression.typeid),
                 UtilFunctionImpl.getIRNameForClass(expression.typeid) + "* " + toReturn);
 
-        
-        if (Constants.ROOT_TYPE.equals(expression.typeid) == false) {
-            System.out.println("sending : new " + expression.typeid);
-            objBitcast = UtilFunctionsIR.convertInstruction(toReturn, expression.typeid, Constants.ROOT_TYPE,
-                    "bitcast");
-        }
-
         return toReturn;
 
     }
@@ -402,14 +390,14 @@ class VisitorImplCodeGen {
 
         // generating labels for different branches that we are going to construct.
 
-        String labelIfEnd = UtilFunctionsIR.LabelGenerator("branch.normal", false);
+        String normalBranch = UtilFunctionsIR.LabelGenerator("branch.normal", false);
 
         // divide by 0 check
         String compare = UtilFunctionsIR.binaryInstruction("icmp eq", second, "0", Constants.INT_TYPE, false);
 
-        UtilFunctionsIR.conditionalBreakInstruction(compare, "division.0", labelIfEnd);
+        UtilFunctionsIR.conditionalBreakInstruction(compare, "division.0", normalBranch);
 
-        UtilFunctionsIR.LabelCreator(labelIfEnd);
+        UtilFunctionsIR.LabelCreator(normalBranch);
         String toReturn = UtilFunctionsIR.binaryInstruction("sdiv", first, second, expression.type, false);
         return toReturn;
     }
@@ -494,7 +482,6 @@ class VisitorImplCodeGen {
     // Visits boolean expression
     public String traverse(AST.bool_const expression)
     {
-        // System.out.println(expression.lineNo);
         if (!expression.value)
             return "0";
         else
@@ -504,20 +491,12 @@ class VisitorImplCodeGen {
     public void traverse(AST.program prog) {
 
         GlobalVariables.inheritanceGraph = new InheritanceGraph();
-        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
-        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
 
         // traversing for all AST class
         for (AST.class_ className : prog.classes) {
             GlobalVariables.inheritanceGraph.addNewClass(className);
-            System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
-            System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         }
-        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
-        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
         GlobalVariables.inheritanceGraph.connectGraphCodegen();
-        System.out.println("t : " + GlobalVariables.inheritanceGraph.inheritanceGraph.size());
-        System.out.println(GlobalVariables.inheritanceGraph.getRootNode().getChildren().size());
 
         // For all functions updating mangled name
         GlobalVariables.mapClassSize.put("Int", Constants.intSize);
@@ -590,7 +569,6 @@ class VisitorImplCodeGen {
     }
 
     private void DFSGenerateConstructors(GraphNode node) {
-        ScopeTableHandler.scopeTable.enterScope();
 
         AST.class_ cl = node.getASTClass();
 
@@ -614,17 +592,11 @@ class VisitorImplCodeGen {
         String parentName = GlobalVariables.inheritanceGraph.inheritanceGraph
                 .get(GlobalVariables.inheritanceGraph.giveClassIndex(cl.name)).getASTClass().parent;
         if (parentName != null) {
-            System.out.println("constructio : " + cl.name);
             UtilFunctionsIR.constructorCall(parentName,
                     UtilFunctionsIR.convertInstruction("%this", cl.name, parentName, "bitcast"));
         }
 
         // now we visit for each attribute of AST.attr
-        for (AST.feature f : cl.features) {
-            if (f instanceof AST.attr) {
-                ScopeTableHandler.insertVar(((AST.attr) f).name, ((AST.attr) f).typeid);
-            }
-        }
 
         for (AST.feature f : cl.features) {
             if (f instanceof AST.attr) {
@@ -635,16 +607,13 @@ class VisitorImplCodeGen {
 
         // traversing in a dfs fashion for children
         for (GraphNode children : node.getChildren()) {
-            System.out.println(children.getASTClass().name + " : " + node.getASTClass().name);
             DFSGenerateConstructors(children);
         }
 
-        ScopeTableHandler.scopeTable.exitScope();
 
     }
 
     private void DFSVisitor(GraphNode node) {
-        ScopeTableHandler.scopeTable.enterScope();
 
         if (!(InheritanceGraph.restrictedType.contains(node.getASTClass().name)
                 || node.getASTClass().name == Constants.ROOT_TYPE)) {
@@ -655,32 +624,8 @@ class VisitorImplCodeGen {
             DFSVisitor(children);
         }
 
-        ScopeTableHandler.scopeTable.exitScope();
-
     }
 
-    // updating our mapMangledNames
-    private void manglingNames() {
-        for (GraphNode tempNode : GlobalVariables.inheritanceGraph.getNodeList()) {
-            AST.class_ newClass = tempNode.getASTClass();
-            for (AST.feature newfeature : newClass.features) {
-                if (newfeature instanceof AST.method) {
-                    AST.method m = (AST.method) newfeature;
-                    System.out.println("name = " + m.name);
-                    String mangeledName = UtilFunctionImpl.getMangledNameWithClass(newClass.name, m.formals, m.name);
-                    System.out.println(mangeledName);
-                    System.out.println(m.typeid);
-                    GlobalVariables.mapMangledNames.put(mangeledName, m.typeid);
-
-                }
-                System.out.println("dffdf");
-            }
-        }
-
-        for (String key : GlobalVariables.mapMangledNames.keySet()) {
-            System.out.println(key);
-        }
-    }
 
     public void traverse(AST.class_ cl) {
         GlobalVariables.presentClass = cl.name;
@@ -689,7 +634,6 @@ class VisitorImplCodeGen {
         for (AST.feature feature : cl.features) {
             // checking for variable
             if (feature instanceof AST.attr) {
-                ScopeTableHandler.insertVar(((AST.attr)feature).name, ((AST.attr)feature).typeid);
             }
             // checking for method
             else {
@@ -730,7 +674,6 @@ class VisitorImplCodeGen {
         }
         // dobule pointer - gep
         else {
-            System.out.println(" printing -- " + attribute.typeid + " value = " + value);
             if (value != null) {
                 // assignemnt being performed
                 if (attribute.value.type.equals(attribute.typeid) == false) {
@@ -753,7 +696,6 @@ class VisitorImplCodeGen {
 
                         // iterate until presentClass is same as attribute.typeid
                         while (attribute.typeid.equals(presentClass) == false) {
-                            System.out.println("attr: " + ancesstorClass);
                             value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, presentClass, "bitcast");
 
                             ancesstorClass = presentClass;
@@ -762,7 +704,6 @@ class VisitorImplCodeGen {
                                     .get(GlobalVariables.inheritanceGraph.giveClassIndex(presentClass))
                                     .getASTClass().parent;
                         }
-                        System.out.println("attr: " + ancesstorClass);
                         value = UtilFunctionsIR.convertInstruction(value, ancesstorClass, attribute.typeid, "bitcast");
                     }
 
@@ -784,7 +725,6 @@ class VisitorImplCodeGen {
     public void traverse(AST.method method) {
         // a new scope, as local variables in a function hides the scope of the
         // member variables of the class
-        ScopeTableHandler.scopeTable.enterScope();
 
         GlobalVariables.GlobalRegisterCounter = 0;
         String methodBody = UtilFunctionsIR.LabelGenerator("method.body", true);
@@ -836,7 +776,6 @@ class VisitorImplCodeGen {
         String register = this.traverse(method.body);
 
         if (method.typeid.equals(method.body.type) == false) {
-            System.out.println("method body: " + method.body.type);
             register = UtilFunctionsIR.convertInstruction(register, method.body.type, method.typeid, "bitcast");
         }
 
@@ -844,8 +783,6 @@ class VisitorImplCodeGen {
 
         GlobalVariables.output.println(returnInst + "\n}");
 
-
-        ScopeTableHandler.scopeTable.exitScope();
     }
 
     // Visits the formals of the method
@@ -855,8 +792,6 @@ class VisitorImplCodeGen {
         String retValue = UtilFunctionImpl.typeOfattr(f.typeid, true) + " %" + f.name;
 
         GlobalVariables.output.print(retValue);
-        // adding in the scope table
-        ScopeTableHandler.insertVar(f.name, f.typeid);
     }
 
 }

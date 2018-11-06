@@ -196,7 +196,6 @@ public class InheritanceGraph
 
     public void addNewClass(AST.class_ newClass)
     {
-        System.out.println("Adding : " + newClass.name);
         //checking for class redefination
         if(classNameToIndex.containsKey(newClass.name))
         {
@@ -257,14 +256,12 @@ public class InheritanceGraph
                 if(!currNode.getASTClass().name.equals(Constants.ROOT_TYPE))
                 {
                     currNode.setParent(AST_ROOT_NODE);
-                    System.out.println(currNode.getIndex() + " :  " + currNode.getASTClass().name);
                     if(!(currNode.getIndex() == 0))
                         AST_ROOT_NODE.addChild(currNode);
                 }
             }
             else
             {
-                System.out.println(currNode.getIndex() + " :  " + currNode.getASTClass().name + " :p " + currNode.getASTClass().parent);
                 if(classNameToIndex.containsKey(currNode.getASTClass().parent))
                 {
                     //adding this node as child to the parent
@@ -288,6 +285,7 @@ public class InheritanceGraph
             if(node.getASTClass().parent == null)
             {
                 //Parent not found
+                //this case is not possible as the AST has passed semantic
             }     
             else
             {
@@ -348,7 +346,6 @@ public class InheritanceGraph
         {
             if(cycleUtil(i))
             {
-                System.out.println("Set true for " + i);
                 hasCycle = true;
                 cycleClass.put(inheritanceGraph.get(i).getASTClass().name, inheritanceGraph.get(i).getASTClass().getLineNo());
 

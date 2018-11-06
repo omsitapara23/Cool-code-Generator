@@ -86,7 +86,7 @@ Completed
 ; Class Declarations
 %class.Object = type {}
 %class.IO = type { %class.Object }
-%class.SimpleExprTests = type { %class.IO, i32, i8, %class.Object*, i32, %class.Object* }
+%class.SimpleExprTests = type { %class.IO, i32, i8, %class.Object*, i32, %class.Object*, i8 }
 %class.Main = type { %class.Object, %class.SimpleExprTests* }
 
 
@@ -122,6 +122,8 @@ entry:
   store i32 0, i32* %4, align 4
   %5 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 5
   store %class.Object* null, %class.Object** %5, align 4
+  %6 = getelementptr inbounds %class.SimpleExprTests, %class.SimpleExprTests* %this,  i32 0, i32 6
+  store i8 0, i8* %6, align 4
   ret void
 }
 
@@ -132,10 +134,9 @@ entry:
   %0 = bitcast %class.Main* %this to %class.Object*
   call void @_CObject6_FObject6_(%class.Object* %0)
   %1 = getelementptr inbounds %class.Main, %class.Main* %this,  i32 0, i32 1
-  %2 = call noalias i8* @malloc(i64 41)
+  %2 = call noalias i8* @malloc(i64 42)
   %3 = bitcast i8* %2 to %class.SimpleExprTests*
   call void @_CSimpleExprTests15_FSimpleExprTests15_(%class.SimpleExprTests* %3)
-  %4 = bitcast %class.SimpleExprTests* %3 to %class.Object*
   store %class.SimpleExprTests* %3, %class.SimpleExprTests** %1, align 4
   ret void
 }

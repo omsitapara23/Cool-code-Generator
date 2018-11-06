@@ -1,6 +1,5 @@
 package cool;
 
-
 class UtilFunctionsIR {
 
     public static String LabelCreator(String label) {
